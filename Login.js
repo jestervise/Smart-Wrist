@@ -1,5 +1,5 @@
 import React,{Component} from 'react';
-import {View,Image,Alert,ImageBackground,TouchableOpacity,Text,TextInput,Dimensions,Animated,Button } from 'react-native';
+import {View,Image,AlertIOS,ToastAndroid,ImageBackground,TouchableOpacity,Text,TextInput,Dimensions,Animated,Button,Platform } from 'react-native';
 import styles from './Styles'
 import * as Animatable from 'react-native-animatable';
 import {Font} from 'expo';
@@ -119,28 +119,29 @@ class LoginPanel extends Component {
         this.register= this.register.bind(this);
         this.props.accountLoginFailed = this.props.accountLoginFailed.bind(this);
     }
+    
 
     iconGenerator=(iconName)=><Icon name={iconName} color="#fff" size={18}/>
     loginButtonPressed=()=>{
-        firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then(
-            user=>{this.props.accountLoginSuccess(user.providerSignIn);
-               
-            console.log(this.props.navigation.navigate);    
-            this.props.navigation.navigate('Home');
-        }            
+        firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
+        .then(
+            user=>{
+                this.props.accountLoginSuccess(user.providerSignIn);
+                console.log(this.props.navigation.navigate);    
+                this.props.navigation.navigate('Home');
+            }            
         )
         .catch(
-            this.props.accountLoginFailed = this.props.accountLoginFailed.bind(this),
-            console.log(this.props),
-            function(error) {
-            // Handle Errors here.
+            (error)=> {
             var errorCode = error.code;
             var errorMessage = error.message;
-            Alert.alert(errorMessage);
             this.props.accountLoginFailed(errorCode);
-            
-          })
-          
+            if(Platform.OS=="android")
+                ToastAndroid.show(errorMessage,ToastAndroid.SHORT);
+            else
+                AlertIOS.alert("Please Try Again",errorMessage);    
+          }
+        )   
           
     }
 
@@ -193,7 +194,7 @@ class LoginPanel extends Component {
         
     render() {
         return (
-       
+           
         <Animatable.View style={styles.inputStyle}>
             <TextInput style={{padding:10}} value={this.state.email} onChangeText={this.handleEmailValue} underlineColorAndroid="#fff" placeholder="Enter your email address" placeholderTextColor="#fff"/>
             <TextInput style={{padding:10}} value={this.state.password} onChangeText={this.handlePasswordValue} underlineColorAndroid="#fff" placeholder="Enter your password" placeholderTextColor="#fff" secureTextEntry={true}/>             

@@ -31,14 +31,14 @@ import {
   createStackNavigator
 } from 'react-navigation';
 import store from "./redux/store"
-
+let timerArray=[];
 
 function writeUserData(userId,day,month,year,hour,minutes) {
   let firebaseUserRef=firebase.database().ref("users/"+userId);
   
   firebaseUserRef.on('child_added', function(snapshot) {
-    console.log(snapshot.key);
-    
+    timerArray.push(snapshot.val);
+    console.log(timerArray);
   });
   
   let newTimerRef=firebaseUserRef.push();
@@ -110,7 +110,7 @@ class Feed extends Component {
         
         var uid = firebase.auth().currentUser.uid;
         writeUserData(uid,day,month,year,hour,minute);
-        this.props.navigation.navigate('TimerStack',{year:year,month:month,day:day});
+        this.props.navigation.navigate('TimerStack');
       }
         
     }
@@ -213,6 +213,7 @@ class Timer extends Component {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text>Timer</Text>
         <Text>{itemId +" "+otherParam}</Text>
+        {timerArray!=null && <View><Text>{timerArray}</Text></View>}
       </View>
     );
   }
