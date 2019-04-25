@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { 
   View, Text, StyleSheet, Button,DatePickerAndroid,
   TimePickerAndroid,DatePickerIOS,Platform,ScrollView,
-  TouchableOpacity,Image,ImageBackground,Dimensions
+  TouchableOpacity,Image,ImageBackground,Dimensions,FlatList
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import styles from './Styles'
@@ -31,23 +31,22 @@ import {
   createStackNavigator
 } from 'react-navigation';
 import store from "./redux/store"
-let timerArray=[];
+let timerObject=[];
 
-function writeUserData(userId,day,month,year,hour,minutes) {
-  let firebaseUserRef=firebase.database().ref("users/"+userId);
+async function writeUserData(userId,day,month,year,hour,minutes) {
   
-  firebaseUserRef.on('child_added', function(snapshot) {
-    timerArray.push(snapshot.val);
-    console.log(timerArray);
+  let firebaseUserRef=firebase.database().ref("users/"+userId);
+  firebaseUserRef.on('child_added',function (snapshot){
+    snapshot.forEach(childSnapshot=>{
+       timerObject.push(childSnapshot.val());
+    })
+    
   });
   
   let newTimerRef=firebaseUserRef.push();
     newTimerRef.set({
-      day: day,
-      month: month,
-      year : year,
-      hour:hour,
-      minutes:minutes
+      date: day+"/"+month+"/"+year,
+      time:hour+":"+minutes
   });
   
 
@@ -87,14 +86,13 @@ class Feed extends Component {
       chosenDate: new Date(),
 
     }
-
+  
   }
 
 
 
   async AddTimer(){
-
-  
+    
     
   if(Platform.OS=='android'){
     //Date Picker
@@ -107,10 +105,11 @@ class Feed extends Component {
         is24Hour: false, // Will display '2 PM'
       });
       if (action !== TimePickerAndroid.dismissedAction){
-        
         var uid = firebase.auth().currentUser.uid;
-        writeUserData(uid,day,month,year,hour,minute);
-        this.props.navigation.navigate('TimerStack');
+        writeUserData(uid,day,month,year,hour,minute).then(
+          ()=>this.props.navigation.navigate('TimerStack')
+        );
+        
       }
         
     }
@@ -144,11 +143,11 @@ class Feed extends Component {
           </TouchableOpacity>
           </ImageBackground>
           {/* <Button title="Go To Detail Screen" onPress={() => this.props.navigation.navigate('Detail')} /> */}
-          <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"Add Timer",desc:'Remind you to eat medicine'}} AddTimer={this.AddTimer}/>
+          <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"Add Timer",desc:'Remind you to eat medicine'}} func={this.AddTimer} rightButton="md-add-circle-outline"/>
           {this.state.isIOS && <View>
             <DatePickerIOS date={this.state.chosenDate} onDateChange={(newDate)=>{ this.setState({chosenDate: newDate});}}
           /></View>}
-          <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"Movement Report",desc:'Check your movement'}} AddTimer={this.AddTimer}/>
+          <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"Movement Report",desc:'Check your movement'}} func={this.AddTimer} rightButton="md-add-circle-outline"/>
           
           {
             this.state.isIOS && <Button title="Submit" onPress={()=>
@@ -173,8 +172,8 @@ class DashBoardButton extends Component{
         <Text style={{ fontWeight: 'bold' }}>{this.props.text.header}</Text>
         <Text style={styles.dashboardTextStyle}>{this.props.text.desc}</Text>
       </View>
-      <TouchableOpacity onPress={this.props.AddTimer}>
-        <Icon name="md-add-circle-outline" size={34} color="#FF5A5A" />
+      <TouchableOpacity onPress={this.props.func}>
+        <Icon name={this.props.rightButton} size={34} color="#FF5A5A" />
       </TouchableOpacity>
     </View>;
   }
@@ -203,7 +202,20 @@ class Profile extends Component {
 }
 
 class Timer extends Component {
+  constructor(props){
+    super(props);
+   
+    this.state={
+      renderText:timerObject,
+    }
+  }
   
+  comp
+
+  DeleteTimer(){
+
+  }
+
   render() {
     const itemId = this.props.navigation.getParam('day', 'NO-ID');
     const otherParam = this.props.navigation.getParam('year', 'some default value');
@@ -213,7 +225,13 @@ class Timer extends Component {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text>Timer</Text>
         <Text>{itemId +" "+otherParam}</Text>
-        {timerArray!=null && <View><Text>{timerArray}</Text></View>}
+        { this.state.renderText.length!=0 && <View>
+        <FlatList data={timerObject}
+         renderItem={(item) => 
+         <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"x",desc:"zxzx"}} func={this.DeleteTimer} rightButton="md-close-circle-outline"/>
+        }
+         /></View>}
+         {console.log(this.state.renderText)}
       </View>
     );
   }
