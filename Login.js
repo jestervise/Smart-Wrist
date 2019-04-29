@@ -10,7 +10,6 @@ import {accountLoginSuccess,accountLoginFailed} from "./redux/actions"
 import { connect } from "react-redux";
 import {Facebook} from 'expo';
 import {createStackNavigator,createAppContainer} from 'react-navigation'
-import {Input} from 'react-native-elements'
 
 
  
@@ -22,8 +21,17 @@ let register = (email,password)=>firebase.auth().createUserWithEmailAndPassword(
   });
 
 
-
  class Login extends Component{
+
+    async componentWillMount(){
+        await firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              this.props.navigation.navigate('Home');
+            }
+          }
+        )
+    }
+     
 
     constructor(props){
         super(props);
@@ -34,6 +42,7 @@ let register = (email,password)=>firebase.auth().createUserWithEmailAndPassword(
             loginButtonText:"GETTING STARTED",
         }
         
+
         this._onPressButton= this._onPressButton.bind(this);
     }
 
@@ -73,6 +82,7 @@ let register = (email,password)=>firebase.auth().createUserWithEmailAndPassword(
 
     render(){
         let animatedStyle={bottom:this.state.yTranslate};
+        
         return (
                 <ImageBackground style={styles.background} source={require("./assets/background_login.png")}>
                 {
@@ -123,15 +133,16 @@ class LoginPanel extends Component {
 
     iconGenerator=(iconName)=><Icon name={iconName} color="#fff" size={18}/>
     loginButtonPressed=()=>{
-        firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
-        .then(
+     
+           firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password)
+            .then(
             user=>{
                 this.props.accountLoginSuccess(user.providerSignIn);
                 console.log(this.props.navigation.navigate);    
                 this.props.navigation.navigate('Home');
             }            
-        )
-        .catch(
+            )
+            .catch(
             (error)=> {
             var errorCode = error.code;
             var errorMessage = error.message;
@@ -142,6 +153,8 @@ class LoginPanel extends Component {
                 AlertIOS.alert("Please Try Again",errorMessage);    
           }
         )   
+    
+        
           
     }
 

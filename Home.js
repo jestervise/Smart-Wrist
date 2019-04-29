@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { 
   View, Text, StyleSheet, Button,DatePickerAndroid,
   TimePickerAndroid,DatePickerIOS,Platform,ScrollView,
-  TouchableOpacity,Image,ImageBackground,Dimensions,FlatList
+  TouchableOpacity,Image,ImageBackground,Dimensions,FlatList,Alert
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import styles from './Styles'
@@ -37,16 +37,27 @@ async function writeUserData(userId,day,month,year,hour,minutes) {
   
   let firebaseUserRef=firebase.database().ref("users/"+userId);
   firebaseUserRef.on('child_added',function (snapshot){
+    let counter =0;
+    let tempObj={};
     snapshot.forEach(childSnapshot=>{
-       timerObject.push(childSnapshot.val());
+      if(counter ==0){
+        tempObj['date']=childSnapshot.val();
+        counter++
+      }else if(counter ==1){
+        tempObj['time']=childSnapshot.val();
+        timerObject.push(tempObj);
+        tempObj={};
+        counter=0;
+      }
+      
     })
-    
+    console.log(timerObject);
   });
   
   let newTimerRef=firebaseUserRef.push();
     newTimerRef.set({
       date: day+"/"+month+"/"+year,
-      time:hour+":"+minutes
+      time:(hour<10?"0"+hour:hour )+":"+(minutes<10?"0"+minutes:minutes )
   });
   
 
@@ -131,7 +142,6 @@ class Feed extends Component {
   render() {
     return (
         <View style={{ flex: 1, backgroundColor:'#EFEBE6' }}>
-
         <ScrollView keyboardShouldPersistTaps="never" >
           <ImageBackground resizeMode='contain' style={{flex:1,flexDirection:'column',justifyContent:'space-between',alignItems:'center',width:'100%',height:height*(64/100),marginBottom: '5%',marginTop:0,paddingTop:0}}source={require("./assets/dashboardBackground.png")}>
             
@@ -185,10 +195,32 @@ class Settings extends Component {
   render() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Settings</Text>
+      
+        <ImageBackground source={require("./assets/settings_background.png")} style={{width:'100%',height:'100%'}}>
+        <Icon name="md-settings" size={34} color="#fff" style={{alignSelf:'flex-end',margin:10}}/>
+        <ScrollView>
+          <Image source={require("./assets/bubble.png")} style={{marginLeft:20,marginBottom:5}}/>
+          <SettingsObject/>
+          <SettingsObject/>
+          <SettingsObject/>
+          <SettingsObject/>
+          <SettingsObject/>
+          <SettingsObject/>
+        </ScrollView>
+       </ImageBackground>
+      
+        
       </View>
     );
   }
+
+ 
+}
+
+const SettingsObject=()=> {
+  return <View style={{ backgroundColor: '#FF5858', marginLeft: 10, marginRight: 10, marginBottom:2,height: 50, flexDirection: 'row',elevation:3 }}>
+    <Text style={{ color: '#fff', alignSelf: 'center', paddingLeft: 20 }}>Color!!</Text>
+  </View>;
 }
 
 class Profile extends Component {
@@ -225,14 +257,67 @@ class Timer extends Component {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text>Timer</Text>
         <Text>{itemId +" "+otherParam}</Text>
-        { this.state.renderText.length!=0 && <View>
-        <FlatList data={timerObject}
-         renderItem={(item) => 
-         <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"x",desc:"zxzx"}} func={this.DeleteTimer} rightButton="md-close-circle-outline"/>
-        }
-         /></View>}
+        { this.state.renderText.length!=0 && 
+        <View>
+          <MultiSelectList data={timerObject} DeleteTimer={this.props.DeleteTimer}/>
+        </View>}
          {console.log(this.state.renderText)}
       </View>
+    );
+  }
+}
+
+class MultiSelectList extends React.PureComponent {
+  state = {selected: new Map()};
+
+  _keyExtractor = (item, index) => item.id;
+
+  _onPressItem = (id) => {
+    // updater functions are preferred for transactional updates
+    this.setState((state) => {
+      // copy the map rather than modifying state.
+      const selected = new Map(state.selected);
+      selected.set(id, !selected.get(id)); // toggle
+      return {selected};
+    });
+  };
+
+  _renderItem = ({item}) => (
+    <MyListItem
+      id={item.id}
+      onPressItem={this._onPressItem}
+      selected={!!this.state.selected.get(item.id)}
+      date={item.date}
+      time={item.time}
+      DeleteTimer={this.props.DeleteTimer}
+    />
+  );
+
+  render() {
+      console.log(this.props.data);
+    return (
+     
+      <FlatList
+        data={this.props.data}
+        extraData={timerObject}
+        keyExtractor={this._keyExtractor}
+        renderItem={this._renderItem}
+      />
+     
+    );
+  }
+}
+
+class MyListItem extends React.PureComponent {
+  _onPress = () => {
+    this.props.onPressItem(this.props.id);
+  };
+
+  render() {
+    return (
+      <TouchableOpacity onPress={this._onPress}>
+        <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:this.props.date,desc:this.props.time}} func={this.props.DeleteTimer} rightButton="md-close-circle-outline"/>
+      </TouchableOpacity>
     );
   }
 }
@@ -255,6 +340,33 @@ const HomeStack = createStackNavigator(
           },
           headerLeft: (
             <Icon style={{ paddingLeft: 10 }} onPress={() => navigation.openDrawer()} name="md-menu" size={30} />
+          ),
+          headerRight:(
+            <Icon name="md-log-out" size={34} color="#000" style={{paddingRight: 10,}} onPress={
+              ()=>{
+                Alert.alert("Alert","Are you sure?",
+                [
+                  {text: 'Yes',style:'default', onPress: () => {
+                    firebase.auth().signOut().then(()=>{
+                      let user=firebase.auth.currentUser;
+                      if(user){
+                        return "logged in"
+                      }else{
+                        return "logged out"
+                      }
+                    }).then((logged)=>{
+                      if(logged=="logged out"){
+                        console.log(logged);
+                        navigation.navigate('ProfileStack');// Navigate ProfileStack
+                      }
+                    }).catch((error)=>console.log(error))
+                  }},//Alert Button Yes
+                  {text: 'No' ,style:'cancel'},//Alert Button No
+                ]//AlertButton
+                );
+               
+            }
+            }/>
           )
         };
       }
