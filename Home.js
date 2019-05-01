@@ -8,6 +8,8 @@ import Icon from '@expo/vector-icons/Ionicons';
 import styles from './Styles'
 import {MiddleCircle} from './SvgShapes'
 import firebase from './firebaseconfig';
+import StepsCounter from './StepsCounter'
+import Call from './Call'
 var { height, width } = Dimensions.get("window");
 /**
  * - AppSwitchNavigator
@@ -146,8 +148,7 @@ class Feed extends Component {
           <ImageBackground resizeMode='contain' style={{flex:1,flexDirection:'column',justifyContent:'space-between',alignItems:'center',width:'100%',height:height*(64/100),marginBottom: '5%',marginTop:0,paddingTop:0}}source={require("./assets/dashboardBackground.png")}>
             
             <MiddleCircle />
-          <Icon name="md-call" size={18} color="#fff" style={{position:'relative',alignSelf:'flex-end',right:"20%"}}/>
-           
+            <Call />
           <TouchableOpacity  style={{flex:0.1,}} onPress={() => this.props.navigation.navigate('Detail')}>
           <Text style={{color:'#fff',marginBottom:20}}>More Details <Icon name="md-arrow-dropdown" size={18} color="#fff"/></Text>
           </TouchableOpacity>
@@ -166,7 +167,7 @@ class Feed extends Component {
 
           <Button title="PlacehodlerButton" onPress={() => this.props.navigation.navigate('Detail')} />
         </ScrollView>
-        
+        <StepsCounter />
       </View>
     );
   }

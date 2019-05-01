@@ -1,2 +1,4 @@
 export const LOGIN_SUCCESS ="LOGIN_SUCCESS";
 export const LOGIN_FAILED = "LOGIN_FAILED";
+export const TOGGLE_LIST_ON="TOGGLE_LIST_ON";
+export const TOGGLE_LIST_OFF="TOGGLE_LIST_OFF";
