@@ -4,6 +4,7 @@ import React from 'react';
 import firebase from './firebaseconfig'
 import {Component} from 'react'
 import ReactNative from 'react-native'
+import Icon from '@expo/vector-icons/Ionicons';
 
 //Variable to store the current humidity and temperature
 let tempHumid=[];
@@ -81,4 +82,23 @@ export class MiddleCircle extends Component{
     </Svg> 
   }
     
+  }
+
+  export class ProfileCircle extends Component{
+    render(){
+      return <Svg height={90} width={100} style={{position:'absolute',bottom:'-15%',left:0}}>
+          
+      <Circle
+        cx={45}
+        cy={45}
+        r={45}
+        x={10}
+        y={1}
+        strokeWidth={2}
+        stroke="#fff"
+        fill="#FFAEAE"
+      />
+      <Icon name="md-person" size ={55} color="white" style={{position:'relative',top:'40%',left:'35%'}}/>
+      </Svg>
+    }
   }

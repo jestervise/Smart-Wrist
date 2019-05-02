@@ -1,9 +1,9 @@
 import React,{Component} from 'react'
-import Modal from 'react-native-modal'
 import {TouchableOpacity,Alert,FlatList,View} from 'react-native'
 import { Button,Text, } from 'react-native-elements';
 import {toggleContactListOff} from './redux/actions'
 import {connect} from 'react-redux'
+import {Overlay} from 'react-native-elements'
 import store from './redux/store'
  class ContactList extends Component{
     contact=this.props.contact
@@ -12,7 +12,7 @@ import store from './redux/store'
     render(){
 
         return(
-            <Modal style={{margin:100,flex:1,position:'absolute',width:'100%',height:'50%',backgroundColor:'white'}} 
+            <Overlay
             isVisible={store.getState().toggleContactList.isHidden} animationIn="bounceInUp" animationOut="bounceOutDown"  
             >
             <View style={{flex:1}}>
@@ -24,7 +24,7 @@ import store from './redux/store'
             </Text>
             </View>
             <Button title="Close" type="outline" onPress={()=>{this.props.toggleContactListOff()}}/>
-            </Modal>  
+            </Overlay>  
         )
        
     }

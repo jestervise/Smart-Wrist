@@ -1,15 +1,19 @@
 import React, { Component } from 'react';
 import { 
-  View, Text, StyleSheet, Button,DatePickerAndroid,
+  View, Text, StyleSheet,TextInput, Button,DatePickerAndroid,
   TimePickerAndroid,DatePickerIOS,Platform,ScrollView,
   TouchableOpacity,Image,ImageBackground,Dimensions,FlatList,Alert
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import styles from './Styles'
-import {MiddleCircle} from './SvgShapes'
+import {MiddleCircle,ProfileCircle} from './SvgShapes'
 import firebase from './firebaseconfig';
 import StepsCounter from './StepsCounter'
 import Call from './Call'
+import Modal from 'react-native-modal'
+import {Calendar as RNCalendar} from 'react-native-calendars'
+import {Permissions,Location,ImagePicker,Calendar} from 'expo'
+import {Overlay,Button as RNButton} from 'react-native-elements'
 var { height, width } = Dimensions.get("window");
 /**
  * - AppSwitchNavigator
@@ -97,9 +101,9 @@ class Feed extends Component {
     this.state={
       isIOS:false,
       chosenDate: new Date(),
-
+      location:null
     }
-  
+     this.getLocationAsync = this.getLocationAsync.bind(this);
   }
 
 
@@ -136,28 +140,73 @@ class Feed extends Component {
     
   }
 
-  componentDidMount(){
-    
+  componentWillMount(){
+    this.getLocationAsync();
   }
   
+  getLocationAsync = async ()=>{
+    let { status } = await Permissions.askAsync(Permissions.LOCATION);
+    console.log("they passed through here");
+    console.log(status);
+    if(status!=='granted'){
+      console.log(status);
+    }
+      
+    
+  }
 
   render() {
     return (
-        <View style={{ flex: 1, backgroundColor:'#EFEBE6' }}>
-        <ScrollView keyboardShouldPersistTaps="never" >
-          <ImageBackground resizeMode='contain' style={{flex:1,flexDirection:'column',justifyContent:'space-between',alignItems:'center',width:'100%',height:height*(64/100),marginBottom: '5%',marginTop:0,paddingTop:0}}source={require("./assets/dashboardBackground.png")}>
-            
+        <View style={{ flex: 1, backgroundColor:'#EFEBE6'}}>
+        <View style={{position:'absolute', left:10,top:20,zIndex: 100,}}>
+          <Icon style={{ paddingLeft: 10,paddingTop:20 }} onPress={() => this.props.navigation.openDrawer()} name="md-menu" size={30} color="#fff"/>
+        </View>
+        <View style={{position:'absolute', right:10,top:20,zIndex: 100,}}>
+          {/* Sign Out Button */}
+          <Icon name="md-log-out" size={30} color="#fff" style={{paddingRight: 10,paddingTop:20}} onPress={
+                ()=>{
+                  Alert.alert("Sign Out","Are you sure?",
+                  [
+                    {text: 'Yes',style:'default', onPress: () => {
+                      firebase.auth().signOut().then(()=>{
+                        let user=firebase.auth.currentUser;
+                        if(user){
+                          return "logged in"
+                        }else{
+                          return "logged out"
+                        }
+                      }).then((logged)=>{
+                        if(logged=="logged out"){
+                          console.log(logged);
+                          navigation.navigate('ProfileStack');// Navigate ProfileStack
+                        }
+                      }).catch((error)=>console.log(error))
+                    }},//Alert Button Yes
+                    {text: 'No' ,style:'cancel'},//Alert Button No
+                  ]//AlertButton
+                  );
+                
+              }
+              }/>
+        </View>
+        <ScrollView keyboardShouldPersistTaps="never">
+          <ImageBackground resizeMode='contain' style={{flex:1,flexDirection:'column',justifyContent:'space-between',alignItems:'center',width:'100%',height:height*(64/100),marginBottom: '5%',marginTop:0,paddingTop:0,top:-20}}source={require("./assets/dashboardBackground.png")}>
+          
             <MiddleCircle />
             <Call />
-          <TouchableOpacity  style={{flex:0.1,}} onPress={() => this.props.navigation.navigate('Detail')}>
-          <Text style={{color:'#fff',marginBottom:20}}>More Details <Icon name="md-arrow-dropdown" size={18} color="#fff"/></Text>
+          <TouchableOpacity  style={{flex:0.1,marginBottom:20}} onPress={() => this.props.navigation.navigate('Detail')}>
+          <Text style={{color:'#fff'}}>More Details <Icon name="md-arrow-dropdown" size={18} color="#fff"/></Text>
           </TouchableOpacity>
           </ImageBackground>
           {/* <Button title="Go To Detail Screen" onPress={() => this.props.navigation.navigate('Detail')} /> */}
           <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"Add Timer",desc:'Remind you to eat medicine'}} func={this.AddTimer} rightButton="md-add-circle-outline"/>
-          {this.state.isIOS && <View>
+          {this.state.isIOS && <Modal>
+            <View>
             <DatePickerIOS date={this.state.chosenDate} onDateChange={(newDate)=>{ this.setState({chosenDate: newDate});}}
-          /></View>}
+          /></View>
+          </Modal>
+          }
+          
           <DashBoardButton iconLocation={require("./assets/AddTimerIcon.png")} text={{header:"Movement Report",desc:'Check your movement'}} func={this.AddTimer} rightButton="md-add-circle-outline"/>
           
           {
@@ -225,13 +274,117 @@ const SettingsObject=()=> {
 }
 
 class Profile extends Component {
+  constructor(props){
+    super(props);
+    this.state={
+      location:null,
+      displayName:firebase.auth().currentUser.displayName==undefined?
+      firebase.auth().currentUser.email:firebase.auth().currentUser.displayName,
+      editable:false,
+      image:require("./assets/placeholderProfilePic.png"),
+      isVisible:false
+    }
+
+    this.textInput = React.createRef();
+  }
+  
+  componentWillMount(){
+    this.getLocationAsync();
+  }
+  async getLocationAsync(){
+    let location = await Location.getCurrentPositionAsync({});
+      let locationAddress =await Location.reverseGeocodeAsync({latitude:location.coords.latitude,longitude:location.coords.longitude});
+      this.setState({location:locationAddress});
+    
+  }
+
+  ChangeDisplayName(){
+    this.setState({editable:true});
+    this.textInput.current.focus();
+  }
+
+  SaveDisplayName(){
+    this.setState({editable:false});
+    firebase.auth().currentUser.updateProfile({
+      displayName:this.state.displayName
+    }).then(()=> console.log(firebase.auth().currentUser.displayName));
+
+  }
+
+  OpenCalender(){
+    console.log("Open Calender method")
+    this.setState({isVisible:true});
+  }
+
+  async ChoosePhotoAsync(){
+    console.log("ChoosePhoto method")
+    if(Platform.OS=='ios'){
+      Permissions.askAsync(Permissions.CAMERA_ROLL).then(()=>
+      ImagePicker.launchImageLibraryAsync({mediaTypes:'Images',allowsEditing:true})
+      );
+    }else{
+      let result=await ImagePicker.launchImageLibraryAsync({mediaTypes:'Images'});
+      console.log(result.uri);
+      if(!result.cancelled){
+        
+        this.setState({image:{uri:result.uri}});
+        console.log(this.state.image)
+
+      }
+         
+    }
+  }
+
   render() {
+    let location="Loading";
+    let  image  = this.state.image;
+    if(this.state.location){
+      location = this.state.location[0].region+","+this.state.location[0].country
+    }
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Profile</Text>
+      <Overlay isVisible={this.state.isVisible} style={{flex:1,justifyContent:'space-between'}}>
+      <Text style={{fontWeight:'bold',fontSize:20,textAlign:'center'}}>Calender</Text>
+      
+      <RNCalendar/>
+      <RNButton title="CLOSE" onPress={()=>this.setState({isVisible:false})}/>
+      </Overlay>
+       <ImageBackground source={this.state.image} 
+       style={{top:0,width:'100%',position:'absolute',height:height*0.4}}>
+       <View style={{flexDirection:'row',justifyContent:'space-between',paddingTop:20}}>
+          <CalenderComponent OpenCalender={this.OpenCalender.bind(this)}/>
+          <EditBanner ChoosePhoto={this.ChoosePhotoAsync.bind(this)}/>
+       </View>
+       <ProfileCircle/>
+       </ImageBackground>
+       {/* username and location tag */}
+        <View style={{top:'5%',marginTop:'5%',left:'10%',width:"65%"}}>
+          <View style={{flexDirection:'row'}}>
+            <TextInput ref={this.textInput} value={this.state.displayName} editable={this.state.editable} onSubmitEditing={this.SaveDisplayName.bind(this)}
+             onChangeText={(text)=>this.setState({displayName:text})} style={{color:"#F68909",fontSize:15,textAlign:"left",fontWeight:'bold'}}/>
+            <EditUserName ChangeDisplayName={this.ChangeDisplayName.bind(this)}/>
+          </View>
+          <View style={{flexDirection:'row',paddingTop:5}}>
+            <Icon name="md-pin" size={12} color="#FF5353" />
+          <Text style={{paddingLeft:10,color:'#FF5353',fontSize:12,textAlign:'left'}}>{location}</Text>
+          </View>
+        </View>
       </View>
     );
   }
+}
+
+const EditBanner=(props)=>{return <TouchableOpacity onPress={props.ChoosePhoto}>
+<Icon name="md-create" size={23} color="#FFAEAE" style={{paddingRight:20,paddingTop:20}}/>
+</TouchableOpacity>}
+const CalenderComponent =(props)=> {return <TouchableOpacity onPress={props.OpenCalender}>
+<Icon name="md-calendar" size={25} color="#FFAEAE" style={{paddingLeft:20,paddingTop:20}}/>
+</TouchableOpacity>}
+
+const EditUserName=(props)=>{
+  return <TouchableOpacity onPress={props.ChangeDisplayName}>
+        <Icon name="md-create" size={15} color="#FF5353" style={{paddingLeft:10}}/>
+    </TouchableOpacity>
 }
 
 class Timer extends Component {
@@ -256,6 +409,7 @@ class Timer extends Component {
     console.log(itemId +otherParam);
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name="md-copy" size={200} color="#FF5A5A"/>
         <Text>Timer</Text>
         <Text>{itemId +" "+otherParam}</Text>
         { this.state.renderText.length!=0 && 
@@ -335,6 +489,7 @@ const HomeStack = createStackNavigator(
       screen: Feed,
       navigationOptions: ({ navigation }) => {
         return {
+          header:null,
           headerTitle:'Home',
           headerStyle:{
             marginBottom:'0%'
@@ -388,6 +543,7 @@ const ProfileStack = createStackNavigator({
     screen: Profile,
     navigationOptions: ({ navigation }) => {
       return {
+        header:null,
         headerTitle: 'Profile',
         headerLeft: (
           <Icon style={{ paddingLeft: 10 }} onPress={() => navigation.openDrawer()} name="md-menu" size={30} />
