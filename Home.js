@@ -2,19 +2,24 @@ import React, { Component } from 'react';
 import { 
   View, Text, StyleSheet,TextInput, Button,DatePickerAndroid,
   TimePickerAndroid,DatePickerIOS,Platform,ScrollView,
-  TouchableOpacity,Image,ImageBackground,Dimensions,FlatList,Alert
+  TouchableOpacity,TouchableNativeFeedback,Image,ImageBackground,Dimensions,FlatList,Alert
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
+
 import styles from './Styles'
-import {MiddleCircle,ProfileCircle} from './SvgShapes'
+import {MiddleCircle,ProfileCircle,TimerCircle} from './SvgShapes'
 import firebase from './firebaseconfig';
+
 import StepsCounter from './StepsCounter'
 import Call from './Call'
 import Modal from 'react-native-modal'
 import {Calendar as RNCalendar} from 'react-native-calendars'
-import {Permissions,Location,ImagePicker,Calendar} from 'expo'
+import {Permissions,Location,ImagePicker,Calendar,LinearGradient,Font} from 'expo'
 import {Overlay,Button as RNButton} from 'react-native-elements'
 var { height, width } = Dimensions.get("window");
+import {createIconSetFromFontello} from '@expo/vector-icons';
+import fontelloConfig from './assets/config.json';
+const FonTelloIcon = createIconSetFromFontello(fontelloConfig, 'c');
 /**
  * - AppSwitchNavigator
  *    - WelcomeScreen
@@ -393,6 +398,7 @@ class Timer extends Component {
    
     this.state={
       renderText:timerObject,
+      fontLoaded:false,
     }
   }
   
@@ -402,22 +408,54 @@ class Timer extends Component {
 
   }
 
-  render() {
-    const itemId = this.props.navigation.getParam('day', 'NO-ID');
-    const otherParam = this.props.navigation.getParam('year', 'some default value');
+  async componentDidMount() {
+    await Font.loadAsync({
+      "plus-circled": require('./assets/fonts/c.ttf')
+    });
 
-    console.log(itemId +otherParam);
+    this.setState({fontLoaded: true});
+  }
+
+  render() {
+
+
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Icon name="md-copy" size={200} color="#FF5A5A"/>
-        <Text>Timer</Text>
-        <Text>{itemId +" "+otherParam}</Text>
+      
+
+      <LinearGradient  colors={['#FA9014', '#FF5050']} style={{  flex: 1,  justifyContent: 'center'}} >
+        <TimerCircle />
+        <View style={{flex:0.1,alignItems:'flex-start',padding:40,}}>
+         <View>
+            <Text>This is top quote</Text>
+          </View>
+        </View>
+        <View style={{flex:0.9,alignItems:'center',flexDirection:'row',padding:40,}}>
+        {/* Alarm Card */}
+         {this.state.renderText.length>0? 
+         <View style={{flex:1,justifyContent:'center',backgroundColor:'white',height:'100%',borderRadius:20,elevation:20}}>
+             <RNButton title="testing!"/>
+          </View>:
+          this.state.fontLoaded?
+          <View style={{flex:1,justifyContent:'center',alignItems:'center',backgroundColor:'white',height:'100%',borderRadius:20,elevation:20}}>
+             < TouchableOpacity>
+               <FonTelloIcon size={100} name="plus-circled" color="#FF5050" />
+             </ TouchableOpacity >
+          </View>:
+          null
+          
+        }
+          
+        </View>
+          
+      
         { this.state.renderText.length!=0 && 
         <View>
           <MultiSelectList data={timerObject} DeleteTimer={this.props.DeleteTimer}/>
         </View>}
          {console.log(this.state.renderText)}
-      </View>
+         </LinearGradient>
+  
+    
     );
   }
 }
@@ -571,6 +609,7 @@ const TimerStack = createStackNavigator({
     screen: Timer,
     navigationOptions: ({ navigation }) => {
       return {
+        header:null,
         headerTitle: 'Timer',
         headerLeft: (
           <Icon style={{ paddingLeft: 10 }} onPress={() => navigation.openDrawer()} name="md-menu" size={30} />

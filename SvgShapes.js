@@ -102,3 +102,29 @@ export class MiddleCircle extends Component{
       </Svg>
     }
   }
+
+  export class TimerCircle extends Component{
+    render(){
+      return  <Svg height={20} width={40} style={{top:0,left:'48%',marginTop:40,}}>
+          
+      <Circle
+        cx={8}
+        cy={7}
+        r={3}
+        fill="#D3D3D3"
+      />
+      <Circle
+        cx={20}
+        cy={5}
+        r={5}
+        fill="#fff"
+      />
+      <Circle
+        cx={32}
+        cy={7}
+        r={3}
+        fill="#D3D3D3"
+      />
+      </Svg>
+    }
+  }
