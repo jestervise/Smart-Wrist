@@ -3,7 +3,7 @@ import Icon from '@expo/vector-icons/Ionicons'
 import {TouchableOpacity,Alert,FlatList,View} from 'react-native'
 import {Contacts,Permissions} from 'expo'
 import {connect} from 'react-redux'
-import {toggleContactListOn} from './redux/actions'
+import {toggleContactListOn} from '../redux/actions'
 import { Button,Text, } from 'react-native-elements';
 import ContactList from './ContactList'
 

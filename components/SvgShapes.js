@@ -18,15 +18,21 @@ export class MiddleCircle extends Component{
       temp:"",
       humid:"",
     }
-    let userId=firebase.auth().currentUser.uid;
+    
    
     this.readUserData=this.readUserData.bind(this);
+    
+  }
+  componentDidMount(){
+    let userId=firebase.auth().currentUser.uid;
     this.readUserData(userId);
   }
-
   readUserData(userId) {
+    // firebase.database().ref("tempHumidData/"+userId).set({temp:0,humid:0});
+    
      //Read the user temperature and humidity and rerender when it's done
     return Promise.all(
+      
       firebase.database().ref("tempHumidData/"+userId+"/-Lc_jjC0XmlMz5rz3Vzf").on('value',(snapshot) =>{
         tempHumid[0]=snapshot.val().temp;
         tempHumid[1]=snapshot.val().humid;
@@ -71,7 +77,7 @@ export class MiddleCircle extends Component{
             <Stop offset="1" stopColor="#9A240A" stopOpacity="0" />
         </LinearGradient>
     </Defs>
-    <Image source={require("./assets/humidity.png")} style={{ flex: 1,
+    <Image source={require("../assets/humidity.png")} style={{ flex: 1,
     aspectRatio: 0.15, 
     resizeMode: 'contain',
     position:'relative',

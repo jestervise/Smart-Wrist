@@ -8,10 +8,10 @@ import {
 } from 'react-navigation';
 import { Provider } from "react-redux";
 import store from "./redux/store";
-import Home from './Home'
-import Login from './Login'
-import DismissKeyboard from './DismissKeyboard';
-import firebase from './firebaseconfig';
+import Home from './components/Home'
+import Login from './components/Login'
+import DismissKeyboard from './components/DismissKeyboard';
+import firebase from './components/firebaseconfig';
 import {AppLoading} from 'expo'
 
 //The main application to control subcomponent

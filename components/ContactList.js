@@ -1,10 +1,10 @@
 import React,{Component} from 'react'
 import {TouchableOpacity,Alert,FlatList,View} from 'react-native'
 import { Button,Text, } from 'react-native-elements';
-import {toggleContactListOff} from './redux/actions'
+import {toggleContactListOff} from '../redux/actions'
 import {connect} from 'react-redux'
 import {Overlay} from 'react-native-elements'
-import store from './redux/store'
+import store from '../redux/store'
  class ContactList extends Component{
     contact=this.props.contact
 

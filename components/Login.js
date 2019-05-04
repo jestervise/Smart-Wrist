@@ -1,12 +1,12 @@
 import React,{Component} from 'react';
 import {View,Image,AlertIOS,ToastAndroid,ImageBackground,TouchableOpacity,Text,TextInput,Dimensions,Animated,Button,Platform } from 'react-native';
-import styles from './Styles'
+import styles from '../Styles'
 import * as Animatable from 'react-native-animatable';
 import {Font} from 'expo';
 var { height, width } = Dimensions.get("window");
 import firebase from './firebaseconfig'
 import Icon from '@expo/vector-icons/Ionicons';
-import {accountLoginSuccess,accountLoginFailed} from "./redux/actions"
+import {accountLoginSuccess,accountLoginFailed} from "../redux/actions"
 import { connect } from "react-redux";
 import {Facebook} from 'expo';
 import {createStackNavigator,createAppContainer} from 'react-navigation'
@@ -63,13 +63,13 @@ let register = (email,password)=>firebase.auth().createUserWithEmailAndPassword(
         this.AnimatedTranslation(0); 
         this.setState({loginButtonText:"LOGIN"});
         this.setState({isShow:true});
+        console.log("xa")
     }
-    
 
     async componentDidMount() {
 
         await Font.loadAsync({
-          'Satisfy': require('./assets/fonts/satisfy.ttf'),
+          'Satisfy': require('../assets/fonts/satisfy.ttf'),
         });
         this.setState({
             fontLoaded:true
@@ -84,9 +84,9 @@ let register = (email,password)=>firebase.auth().createUserWithEmailAndPassword(
         let animatedStyle={bottom:this.state.yTranslate};
         
         return (
-                <ImageBackground style={styles.background} source={require("./assets/background_login.png")}>
+                <ImageBackground style={styles.background} source={require("../assets/background_login.png")}>
                 {
-                    this.state.fontLoaded?<Animatable.Image animation="flipInY" source={require("./assets/logo.png")} style={styles.logo}/>:null 
+                    this.state.fontLoaded?<Animatable.Image animation="flipInY" source={require("../assets/logo.png")} style={styles.logo}/>:null 
                 }
                 {
                 this.state.fontLoaded?(
@@ -97,7 +97,7 @@ let register = (email,password)=>firebase.auth().createUserWithEmailAndPassword(
                
                 <Animatable.View  style={[styles.bottomBar,animatedStyle]}>
                     
-                    <ImageBackground style={styles.imageStyle} source={require("./assets/bottom_bar.png")} >
+                    <ImageBackground style={styles.imageStyle} source={require("../assets/bottom_bar.png")} >
                         {this.state.isShow && 
                         <LoginPanel accountLoginSuccess={this.props.accountLoginSuccess} accountLoginFailed={this.props.accountLoginFailed} navigation={this.props.navigation}/>}
                         <Animatable.View ref={this.handleViewRef}>
