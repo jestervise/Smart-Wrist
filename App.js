@@ -13,6 +13,7 @@ import Login from './components/Login'
 import DismissKeyboard from './components/DismissKeyboard';
 import firebase from './components/firebaseconfig';
 import {AppLoading} from 'expo'
+import SplashScren from './components/SplashScreen'
 
 //The main application to control subcomponent
 export default class App extends React.Component {

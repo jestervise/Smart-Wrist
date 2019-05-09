@@ -15,11 +15,10 @@ import StepsCounter from './StepsCounter'
 import Call from './Call'
 import Modal from 'react-native-modal'
 import {Calendar as RNCalendar} from 'react-native-calendars'
-import {Permissions,Location,ImagePicker,Calendar,LinearGradient,Font,IntentLauncherAndroid as IntentLauncher} from 'expo'
+import {Permissions,Location,ImagePicker,Calendar,LinearGradient,Font,IntentLauncherAndroid as IntentLauncher,Notifications} from 'expo'
 import {Overlay,Button as RNButton} from 'react-native-elements'
 import {createIconSetFromFontello} from '@expo/vector-icons';
 import fontelloConfig from '../assets/config.json';
-
 const FonTelloIcon = createIconSetFromFontello(fontelloConfig, 'c');
 var { height, width } = Dimensions.get("window");
 
@@ -47,8 +46,8 @@ import {
 import store from "../redux/store"
 let timerObject=[];
 
-async function writeUserData(userId,day,month,year,hour,minutes) {
-  
+function initializeFirebaseTimer(){
+  let userId=firebase.auth().currentUser.uid;
   let firebaseUserRef=firebase.database().ref("users/"+userId);
   firebaseUserRef.on('child_added',function (snapshot){
     let counter =0;
@@ -65,9 +64,14 @@ async function writeUserData(userId,day,month,year,hour,minutes) {
       }
       
     })
-    console.log(timerObject);
+    //console.log(timerObject);
   });
-  
+}
+
+async function writeUserData(userId,day,month,year,hour,minutes) {
+  timerObject=[];
+  let firebaseUserRef=firebase.database().ref("users/"+userId);
+  initializeFirebaseTimer();
   let newTimerRef=firebaseUserRef.push();
     newTimerRef.set({
       date: day+"/"+month+"/"+year,
@@ -79,11 +83,74 @@ async function writeUserData(userId,day,month,year,hour,minutes) {
 
 }
 
+async function AddTimer(){
+  //Ask for reminder permission in IOS
+ 
+  
+  if(Platform.OS=='android'){
+    //Date Picker
+    const {action, year, month, day}= await DatePickerAndroid.open();
+   
+    if (action !== DatePickerAndroid.dismissedAction) {
+      const { action ,hour, minute} = await TimePickerAndroid.open({
+        hour: new Date().getHours(),
+        minute: new Date().getMinutes(),
+        is24Hour: false, // Will display '2 PM'
+      });
+      if (action !== TimePickerAndroid.dismissedAction){
+        var uid = firebase.auth().currentUser.uid;
+        var remindersPermission=await Permissions.askAsync(Permissions.CALENDAR);
+          if(remindersPermission.status=="granted"){
+            createCalenderEvent(year,month,day,hour,minute)
+          }
+       
+        writeUserData(uid,day,month,year,hour,minute);
+        
+    }
 
+
+
+  }
+}
+}
+
+async function createCalenderEvent(year,month,day,hour,minute){
+  hour<10?hour="0"+hour:hour;
+  minute<10?minutes="0"+minute:minute
+  month<10?month="0"+month:month
+
+  let createCalenderPromise=await Calendar.createCalendarAsync({title:"Calendar",color:"red",
+  source:{name:"blahblahblah",isLocalAccount:true},
+  name:"csc",
+  ownerAccount:"thissa"
+  })
+
+  console.log(createCalenderPromise);
+
+  try{
+    if(createCalenderPromise)
+    Calendar.createEventAsync(createCalenderPromise, 
+      //Details of reminder
+      {title:'Reminder',
+      startDate: new Date(year+"-"+month+"-"+day+"T"+hour+":"+minute+":"+"00"),
+      endDate: new Date(year+"-"+month+"-"+day+"T"+hour+":"+minute+":"+"00"),
+      allDay:false,
+      location:"house",
+      notes:"Take pill",
+      alarms:[{relativeOffset:"-2",method:Calendar.AlarmMethod.ALARM}],
+      timeZone:"GMT+8"
+  })
+  }catch(error){
+    console.log(error)
+  }
+   
+}
 
 
 class Home extends Component {
-
+  constuctor (props){
+    initializeFirebaseTimer();
+  }
   render() {
     return <AppContainer />;
   }
@@ -171,6 +238,10 @@ class Feed extends Component {
   handleScroll=(event)=>{
     if(event.nativeEvent.contentOffset.y>240)
       this.setState({iconColor:'#000'})
+    else if(event.nativeEvent.contentOffset.y<10){
+      this.setState({iconColor:'#fff'})
+      console.log("pop")
+    }
     else  
       this.setState({iconColor:'#fff'})
   }
@@ -519,7 +590,7 @@ const EditUserName=(props)=>{
 class Timer extends Component {
   constructor(props){
     super(props);
-   
+    initializeFirebaseTimer();
     this.state={
       renderText:timerObject,
       fontLoaded:false,
@@ -561,7 +632,7 @@ class Timer extends Component {
       
   
     }  
-    }
+  }
 
   async AddAlarmAnimation(){
     console.log("go through here");
@@ -591,17 +662,17 @@ class Timer extends Component {
 
       <LinearGradient  colors={['#FA9014', '#FF5050']} style={{  flex: 1,  justifyContent: 'center'}} >
         <TimerCircle />
-        <View style={{flex:0.1,alignItems:'flex-start',padding:40,}}>
+        <View style={{flex:0.2,alignItems:'flex-start',padding:40,}}>
          <View>
             <Text>This is top quote</Text>
           </View>
         </View>
-        <View style={{flex:0.9,alignItems:'center',justifycontent:'center',flexDirection:'row',padding:40,}}>
+        <View style={{flex:0.8,justifyContent:'flex-start',alignItems:'center',flexDirection:'column',height:'100%'}}>
         {/* Alarm Card */}
          {this.state.renderText.length!=0? 
-         <MultiSelectList/>:
+         <MultiSelectList data={timerObject} style={{justifyContent: 'center',alignItems:'center'}} DeleteTimer={this.props.DeleteTimer}/>:
           this.state.fontLoaded?
-          <View style={{flex:1,justifyContent:'center',alignItems:'center',backgroundColor:'white',height:'100%',borderRadius:20,elevation:20}}>
+          <View style={{flex:1,justifyContent:'center',alignItems:'center',backgroundColor:'white',margin: '10%',width:width*0.8,borderRadius:20,elevation:20}}>
             {this.state.showButton && !this.state.killButton && < TouchableOpacity  onPress={this.AddTimer}>
                <FonTelloIcon size={100} name="plus-circled" color="#FF5050" />
              </ TouchableOpacity >
@@ -613,13 +684,8 @@ class Timer extends Component {
         }
           
         </View>
-          
-      
-        { this.state.renderText.length!=0 && 
-        <View>
-          <MultiSelectList data={timerObject} DeleteTimer={this.props.DeleteTimer}/>
-        </View>}
-         {console.log(this.state.renderText)}
+        
+         {/* {console.log(this.state.renderText)} */}
          </LinearGradient>
   
     
@@ -629,8 +695,9 @@ class Timer extends Component {
 
 class MultiSelectList extends React.PureComponent {
   state = {selected: new Map()};
-
   _keyExtractor = (item, index) =>item.id;
+
+ 
 
   _onPressItem = (id) => {
     console.log(id)
@@ -642,46 +709,89 @@ class MultiSelectList extends React.PureComponent {
       selected.set(id, !selected.get(id)); // toggle
       return {selected};
     });
-   
+    AddTimer();
   };
  
   _renderItem = ({item}) => (
-    <MyListItem
-      id={item.id}
-      onPressItem={this._onPressItem}
-      selected={!!this.state.selected.get(item.id)}
-      date={item.date}
-      time={item.time}
-      DeleteTimer={this.props.DeleteTimer}
-    />
-  );
+   <MyListItem
+    id={item.id}
+    onPressItem={this._onPressItem}
+    selected={!!this.state.selected.get(item.id)}
+    date={item.date}
+    time={item.time}
+    DeleteTimer={this.props.DeleteTimer}
+  />
+  )
 
   render() {
-      //console.log(this.props.data);
+      console.log(timerObject);
     return (
-     
       <FlatList
         data={this.props.data}
         extraData={timerObject}
         keyExtractor={this._keyExtractor}
         renderItem={this._renderItem}
         horizontal={true}
+        vertical={false}
+        ListFooterComponent={<FooterComponent _onPressItem={this._onPressItem}/>}
+        showsHorizontalScrollIndicator={false}
       />
      
     );
   }
 }
 
+const FooterComponent=(props)=>{
+
+    return < TouchableOpacity style={{top:'30%',justifyContent:'center',padding:20,}} onPress={props._onPressItem}>
+    <FonTelloIcon size={100} name="plus-circled" color="#fff"/>
+  </ TouchableOpacity >
+ 
+}
+ 
+
+
 class MyListItem extends React.PureComponent {
+  state={
+    isShow:false,
+    date:""
+  }
   _onPress = () => {
-    this.props.onPressItem(this.props.id);
+    //this.props.onPressItem(this.props.id);
+    this.setState({isShow:!this.state.isShow})
   };
 
   render() {
     return (
-      <TouchableOpacity onPress={this._onPress} style={{flex:1,justifyContent:'center',backgroundColor:'white',height:'80%',width:width*0.8,margin:40,borderRadius:20,elevation:20}}>
-            <RNButton title={this.props.date+" " +this.props.time} onPress={this.props.DeleteTimer}/>
-      </TouchableOpacity>
+      <View style={{flex:1,justifyContent:'center',alignItems:'center',
+      flexDirection:'column',backgroundColor:'white',height:'70%',width:width*0.8,
+      margin:40,borderRadius:20,elevation:20}}>
+            {/* Display date time */}
+            <View style={{justifyContent:'center'}}>
+              <Text style={{fontSize:20}}>{this.props.date+" "+this.props.time}</Text>
+            </View>
+            {/* Close Button for Delete timer*/}
+            <TouchableOpacity  style={{marginTop:20}} onPress={()=>{console.log("Kaboom!! You break something!!")}}>
+            <Icon name="md-close-circle" size={35} color="#FF5353"/>
+            </TouchableOpacity>
+            {/* Edit date time */}
+            <TouchableOpacity onPress={this._onPress} style={{position:'absolute',right:10,top:10}}>
+              <Icon  name="md-create" size={25} color="#FF5353" style={{padding:10}}/>
+            </TouchableOpacity>
+             {/* Edit date time overlay screen */}
+            <Overlay isVisible={this.state.isShow} onBackdropPress={this._onPress} 
+            style={{justifyContent:'center',alignItems: 'center',}}>
+            <View style={{justifyContent:'center'}}>
+              <TextInput onFocus={async ()=>{ 
+                const {action, year, month, day}= await DatePickerAndroid.open();
+                if(action!=DatePickerAndroid.dismissedAction)
+                  this.setState({date:day+"/"+month+"/"+year})
+                  
+                }} value={this.state.date} placeholder="Please choose the date" style={{padding:20}}/>
+              <RNButton title={"CLOSE"}  onPress={this._onPress}/>
+            </View>
+            </Overlay>
+      </View>
      
     );
   }

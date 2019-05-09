@@ -1,9 +1,10 @@
-import {Svg,Circle,Text,Defs,TSpan,LinearGradient,Stop} from 'react-native-svg'
-import {Image} from 'react-native'
+import {Svg,Circle,Text,Defs,TSpan,LinearGradient,Stop,Image as SvgImage,ClipPath} from 'react-native-svg'
+import {Image,Platform} from 'react-native'
 import React from 'react';
 import firebase from './firebaseconfig'
 import {Component} from 'react'
 import ReactNative from 'react-native'
+import {Permissions,ImagePicker} from 'expo'
 import Icon from '@expo/vector-icons/Ionicons';
 
 //Variable to store the current humidity and temperature
@@ -90,47 +91,137 @@ export class MiddleCircle extends Component{
     
   }
 
-  export class ProfileCircle extends Component{
-    render(){
-      return <Svg height={90} width={100} style={{position:'absolute',bottom:'-15%',left:0}}>
-          
-      <Circle
-        cx={45}
-        cy={45}
-        r={45}
-        x={10}
-        y={1}
-        strokeWidth={2}
-        stroke="#fff"
-        fill="#FFAEAE"
-      />
-      <Icon name="md-person" size ={55} color="white" style={{position:'relative',top:'40%',left:'35%'}}/>
-      </Svg>
-    }
+export class ProfileCircle extends Component{
+  
+  constructor(props){
+    super(props)
+    this.state={iconSet:false,
+      avatar:null
+      }
+    this.UploadToStorage=this.UploadToStorage.bind(this)
+    this.ChooseFromGalleryAsync=this.ChooseFromGalleryAsync.bind(this)
+    
   }
 
-  export class TimerCircle extends Component{
-    render(){
-      return  <Svg height={20} width={40} style={{top:0,left:'48%',marginTop:40,}}>
-          
-      <Circle
-        cx={8}
-        cy={7}
-        r={3}
-        fill="#D3D3D3"
-      />
-      <Circle
-        cx={20}
-        cy={5}
-        r={5}
-        fill="#fff"
-      />
-      <Circle
-        cx={32}
-        cy={7}
-        r={3}
-        fill="#D3D3D3"
-      />
-      </Svg>
-    }
+  async componentDidMount(){
+    const url =await this.headerImage().getDownloadURL();
+    console.log(url)
+    if(url)
+      this.setState({avatar:{uri:url}})
   }
+
+  headerImage=function(){
+    return firebase.storage().ref().child("images/avatar"+firebase.auth().currentUser.uid)
+  }
+ 
+  //If "choose from gallery option is selected"
+  async ChooseFromGalleryAsync(){
+    console.log("Gallery method")
+    if(Platform.OS=='ios'){
+      Permissions.askAsync(Permissions.CAMERA_ROLL).then(()=>
+      ImagePicker.launchImageLibraryAsync({mediaTypes:'Images',allowsEditing:true})
+      );
+    }else{
+      let result = await ImagePicker.launchImageLibraryAsync({mediaTypes:'Images'})
+      
+      if(!result.cancelled){
+        this.UploadToStorage(result.uri);
+      }
+        
+  
+     }
+  }
+
+  //Establish connection to local storage,Set the header image to selected photo, and upload the image
+  async UploadToStorage(uri){
+
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function(e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+
+    
+    this.setState({avatar:{uri:uri}});
+    let snapshot=await this.headerImage().put(blob)
+    blob.close();
+  }
+
+  render(){
+    return <Svg height={90} width={100} style={{position:'absolute',bottom:'-15%',left:0}}>
+   <Defs>
+   <ClipPath id="clip">
+    <Circle
+      cx={45}
+      cy={45}
+      r={45}
+      x={10}
+      y={1}
+      strokeWidth={2}
+      stroke="#fff"
+      fill="#FFAEAE"
+      
+    />
+     </ClipPath>
+    </Defs>
+    <Circle
+      cx={45}
+      cy={45}
+      r={45}
+      x={10}
+      y={1}
+      strokeWidth={2}
+      stroke="#fff"
+      fill="#FFAEAE"
+      onPress={this.ChooseFromGalleryAsync}
+    />
+    <SvgImage href={this.state.avatar} cx={45}
+      width={110}
+      height={120}
+      x={10}
+      y={-20}
+      preserveAspectRatio="xMidYMid slice"
+      clipPath="url(#clip)"
+      
+      />
+    {this.state.avatar==null && <Icon name="md-person" size ={55} color="white" style={{position:'relative',top:'40%',left:'35%'}}/>
+    }
+    </Svg>
+  }
+}
+
+
+
+export class TimerCircle extends Component{
+render(){
+  return  <Svg height={20} width={40} style={{top:0,left:'48%',marginTop:40,}}>
+      
+  <Circle
+    cx={8}
+    cy={7}
+    r={3}
+    fill="#D3D3D3"
+  />
+  <Circle
+    cx={20}
+    cy={5}
+    r={5}
+    fill="#fff"
+  />
+  <Circle
+    cx={32}
+    cy={7}
+    r={3}
+    fill="#D3D3D3"
+  />
+  </Svg>
+}
+}
