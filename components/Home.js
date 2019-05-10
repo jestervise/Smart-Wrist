@@ -15,7 +15,7 @@ import StepsCounter from './StepsCounter'
 import Call from './Call'
 import Modal from 'react-native-modal'
 import {Calendar as RNCalendar} from 'react-native-calendars'
-import {Permissions,Location,ImagePicker,Calendar,LinearGradient,Font,IntentLauncherAndroid as IntentLauncher,Notifications} from 'expo'
+import Expo,{Permissions,Location,ImagePicker,Calendar,LinearGradient,Font,IntentLauncherAndroid as IntentLauncher,Notifications} from 'expo'
 import {Overlay,Button as RNButton} from 'react-native-elements'
 import {createIconSetFromFontello} from '@expo/vector-icons';
 import fontelloConfig from '../assets/config.json';
@@ -119,27 +119,31 @@ async function createCalenderEvent(year,month,day,hour,minute){
   minute<10?minutes="0"+minute:minute
   month<10?month="0"+month:month
 
-  let createCalenderPromise=await Calendar.createCalendarAsync({title:"Calendar",color:"red",
-  source:{name:"blahblahblah",isLocalAccount:true},
-  name:"csc",
-  ownerAccount:"thissa"
-  })
-
-  console.log(createCalenderPromise);
-
+  // let createCalenderPromise=await Calendar.createCalendarAsync({title:"Calendar",color:"red",
+  // source:{name:"blahblahblah",isLocalAccount:true},
+  // name:"csc",
+  // ownerAccount:"thissa"
+  // })
+  //Get the calendar in your local device
+  let calendars= await Calendar.getCalendarsAsync();
+  let calendarId;
+  calendarId= calendars[0].calendarId;
+  console.log("calendar 1:"+JSON.stringify(calendars[0]));
+  //Create the alarm event on the specific calendar with the calendar id
   try{
-    if(createCalenderPromise)
-    Calendar.createEventAsync(createCalenderPromise, 
-      //Details of reminder
-      {title:'Reminder',
-      startDate: new Date(year+"-"+month+"-"+day+"T"+hour+":"+minute+":"+"00"),
-      endDate: new Date(year+"-"+month+"-"+day+"T"+hour+":"+minute+":"+"00"),
-      allDay:false,
-      location:"house",
-      notes:"Take pill",
-      alarms:[{relativeOffset:"-2",method:Calendar.AlarmMethod.ALARM}],
-      timeZone:"GMT+8"
-  })
+  
+    if(calendarId)
+      var succeeded=await Calendar.createEventAsync(Expo.Calendar.DEFAULT, 
+        //Details of reminder
+        {title:'Reminder1',
+        startDate: new Date("2019-05-10"),//year+"-"+month+"-"+day),//+"T"+hour+":"+minute+":"+"00"),
+        endDate: new Date("2019-05-10"),//year+"-"+month+"-"+day),//+"T"+hour+":"+minute+":"+"00"),
+        allDay:false,
+        notes:"Take pill",
+        alarms:[{relativeOffset:"-2",method:Calendar.AlarmMethod.ALARM}],
+        timeZone:"GMT+8",
+        accessLevel:'owner'
+    }).then((x)=>{console.log("result:"+ x)}).catch((x)=>{console.log("failure"+x)})
   }catch(error){
     console.log(error)
   }
