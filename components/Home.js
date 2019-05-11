@@ -52,8 +52,17 @@ function initializeFirebaseTimer(){
   firebaseUserRef.on('child_added',function (snapshot){
     let counter =0;
     let tempObj={};
+    // const xa=Object.entries(snapshot.val());
+    // console.log(xa);
+    // console.log("Snapshot Val"+JSON.stringify(snapshot.val()));
     snapshot.forEach(childSnapshot=>{
       if(counter ==0){
+        //Set the data getting from firebase to the date format
+        // let thisDate =new Date(childSnapshot.val());
+        // if(thisDate.getTime()<Date.now()){
+        //   snapshot.ref.remove();
+        //   console.log("removed")
+        // }
         tempObj['date']=childSnapshot.val();
         counter++
       }else if(counter ==1){
@@ -101,10 +110,10 @@ async function AddTimer(){
         var uid = firebase.auth().currentUser.uid;
         var remindersPermission=await Permissions.askAsync(Permissions.CALENDAR);
           if(remindersPermission.status=="granted"){
-            createCalenderEvent(year,month,day,hour,minute)
+            createCalenderEvent(year,month+1,day,hour,minute)
           }
        
-        writeUserData(uid,day,month,year,hour,minute);
+        writeUserData(uid,day,month+1,year,hour,minute);
         
     }
 
@@ -115,33 +124,32 @@ async function AddTimer(){
 }
 
 async function createCalenderEvent(year,month,day,hour,minute){
+  //Reformat the time 
   hour<10?hour="0"+hour:hour;
   minute<10?minutes="0"+minute:minute
   month<10?month="0"+month:month
 
-  // let createCalenderPromise=await Calendar.createCalendarAsync({title:"Calendar",color:"red",
-  // source:{name:"blahblahblah",isLocalAccount:true},
-  // name:"csc",
-  // ownerAccount:"thissa"
-  // })
   //Get the calendar in your local device
   let calendars= await Calendar.getCalendarsAsync();
   let calendarId;
-  calendarId= calendars[0].calendarId;
-  console.log("calendar 1:"+JSON.stringify(calendars[0]));
+  calendarId= calendars[0].id;
+  //Set the date to the date selected by user
+  let date = new Date(year+"-"+month+"-"+day+"T"+hour+":"+minute+":"+"00");
+  //Offset the hour to gmt -8 to counter the gmt+8 setting in android
+  date.setHours(date.getHours()-8);
   //Create the alarm event on the specific calendar with the calendar id
   try{
-  
-    if(calendarId)
-      var succeeded=await Calendar.createEventAsync(Expo.Calendar.DEFAULT, 
+      var eventId=await Calendar.createEventAsync(calendarId, 
         //Details of reminder
-        {title:'Reminder1',
-        startDate: new Date("2019-05-10"),//year+"-"+month+"-"+day),//+"T"+hour+":"+minute+":"+"00"),
-        endDate: new Date("2019-05-10"),//year+"-"+month+"-"+day),//+"T"+hour+":"+minute+":"+"00"),
+        {title:'Smart Wrist: Take Pill',
+        startDate: date,
+        endDate: date,
         allDay:false,
+        location:"Malaysia",
         notes:"Take pill",
-        alarms:[{relativeOffset:"-2",method:Calendar.AlarmMethod.ALARM}],
-        timeZone:"GMT+8",
+        //Alert user through 
+        alarms:[{relativeOffset:0,method:"alert"}],
+        timeZone:"GMT+0",
         accessLevel:'owner'
     }).then((x)=>{console.log("result:"+ x)}).catch((x)=>{console.log("failure"+x)})
   }catch(error){
@@ -203,7 +211,7 @@ class Feed extends Component {
       });
       if (action !== TimePickerAndroid.dismissedAction){
         var uid = firebase.auth().currentUser.uid;
-        writeUserData(uid,day,month,year,hour,minute).then(
+        writeUserData(uid,day,month+1,year,hour,minute).then(
           ()=>this.props.navigation.navigate('TimerStack')
         );
         
@@ -609,10 +617,7 @@ class Timer extends Component {
   
   comp
 
-  DeleteTimer(){
-
-  }
-
+ 
   async AddTimer(){
     
     
@@ -628,7 +633,7 @@ class Timer extends Component {
         });
         if (action !== TimePickerAndroid.dismissedAction){
           var uid = firebase.auth().currentUser.uid;
-          this.AddAlarmAnimation().then(writeUserData(uid,day,month,year,hour,minute))
+          this.AddAlarmAnimation().then(writeUserData(uid,day,month+1,year,hour,minute))
           
         }
           
@@ -655,6 +660,7 @@ class Timer extends Component {
       "c": require('../assets/fonts/c.ttf')
     }).then(()=>this.setState({fontLoaded: true}));
 
+  
     
   }
 
@@ -701,7 +707,10 @@ class MultiSelectList extends React.PureComponent {
   state = {selected: new Map()};
   _keyExtractor = (item, index) =>item.id;
 
- 
+  DeleteTimer(){
+
+  }
+
 
   _onPressItem = (id) => {
     console.log(id)
@@ -723,7 +732,7 @@ class MultiSelectList extends React.PureComponent {
     selected={!!this.state.selected.get(item.id)}
     date={item.date}
     time={item.time}
-    DeleteTimer={this.props.DeleteTimer}
+    DeleteTimer={this.DeleteTimer}
   />
   )
 
@@ -775,7 +784,7 @@ class MyListItem extends React.PureComponent {
               <Text style={{fontSize:20}}>{this.props.date+" "+this.props.time}</Text>
             </View>
             {/* Close Button for Delete timer*/}
-            <TouchableOpacity  style={{marginTop:20}} onPress={()=>{console.log("Kaboom!! You break something!!")}}>
+            <TouchableOpacity  style={{marginTop:20}} onPress={this.props.DeleteTimer}>
             <Icon name="md-close-circle" size={35} color="#FF5353"/>
             </TouchableOpacity>
             {/* Edit date time */}
