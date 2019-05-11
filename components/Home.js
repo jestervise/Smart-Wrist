@@ -61,7 +61,7 @@ function initializeFirebaseTimer(){
         // let thisDate =new Date(childSnapshot.val());
         // if(thisDate.getTime()<Date.now()){
         //   snapshot.ref.remove();
-        //   console.log("removed")
+        //   console.log("removed")aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
         // }
         tempObj['date']=childSnapshot.val();
         counter++
