@@ -50,8 +50,9 @@ function initializeFirebaseTimer(){
   let userId=firebase.auth().currentUser.uid;
   let firebaseUserRef=firebase.database().ref("users/"+userId);
   firebaseUserRef.on('value',function (snapshot){
-    if(snapshot.val()!=undefined)
-      timerObject=Object.entries(snapshot.val());
+    //if(snapshot.val()!=undefined)
+    console.log(snapshot.val());
+      timerObject=snapshot.val()?Object.entries(snapshot.val()):[];
     console.log(timerObject);
     
   });
@@ -60,13 +61,14 @@ function initializeFirebaseTimer(){
 async function writeUserData(userId,day,month,year,hour,minutes) {
   timerObject=[];
   let firebaseUserRef=firebase.database().ref("users/"+userId);
-  initializeFirebaseTimer();
+  
   let newTimerRef=firebaseUserRef.push();
     newTimerRef.set({
       date: day+"/"+month+"/"+year,
       time:(hour<10?"0"+hour:hour )+":"+(minutes<10?"0"+minutes:minutes )
   });
-  
+  //Problem?
+  initializeFirebaseTimer();
   return Promise.resolve("done")
   
 
