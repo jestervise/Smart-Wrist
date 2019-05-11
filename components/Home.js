@@ -50,7 +50,8 @@ function initializeFirebaseTimer(){
   let userId=firebase.auth().currentUser.uid;
   let firebaseUserRef=firebase.database().ref("users/"+userId);
   firebaseUserRef.on('value',function (snapshot){
-    timerObject=Object.entries(snapshot.val());
+    if(snapshot.val()!=undefined)
+      timerObject=Object.entries(snapshot.val());
     console.log(timerObject);
     
   });
@@ -66,7 +67,7 @@ async function writeUserData(userId,day,month,year,hour,minutes) {
       time:(hour<10?"0"+hour:hour )+":"+(minutes<10?"0"+minutes:minutes )
   });
   
-
+  return Promise.resolve("done")
   
 
 }
@@ -92,7 +93,10 @@ async function AddTimer(){
             createCalenderEvent(year,month+1,day,hour,minute)
           }
        
-        writeUserData(uid,day,month+1,year,hour,minute);
+       let done=await writeUserData(uid,day,month+1,year,hour,minute);
+       if(done=="done"){
+         return "done"
+       }
         
     }
 
@@ -583,7 +587,7 @@ class Timer extends Component {
     super(props);
     initializeFirebaseTimer();
     this.state={
-      renderText:timerObject,
+      renderText:timerObject.length,
       fontLoaded:false,
       showButton:true,
       endAnim:false,
@@ -658,7 +662,7 @@ class Timer extends Component {
         </View>
         <View style={{flex:0.8,justifyContent:'flex-start',alignItems:'center',flexDirection:'column',height:'100%'}}>
         {/* Alarm Card */}
-         {this.state.renderText.length!=0? 
+         {this.state.renderText!=0? 
          <MultiSelectList data={timerObject} style={{justifyContent: 'center',alignItems:'center'}} DeleteTimer={this.props.DeleteTimer}/>:
           this.state.fontLoaded?
           <View style={{flex:1,justifyContent:'center',alignItems:'center',backgroundColor:'white',margin: '10%',width:width*0.8,borderRadius:20,elevation:20}}>
@@ -683,7 +687,7 @@ class Timer extends Component {
 }
 
 class MultiSelectList extends React.PureComponent {
-  state = {selected: new Map()};
+  state = {selected: new Map(),dataSource:timerObject};
   _keyExtractor = (item, index) =>item[0];
 
   DeleteTimer(){
@@ -692,12 +696,13 @@ class MultiSelectList extends React.PureComponent {
 
 
   _onPressItem = (id,index) => {
-    console.log(id +" "+ index)
-    let user =firebase.auth().currentUser;
-    firebase.database().ref("users/"+user+"/"+id).remove();
     const start = timerObject.slice(0, index);
     const end = timerObject.slice(index + 1);
-    timerObject= start.concat(end)
+    timerObject.splice(index,1)
+    this.setState({dataSource:start.concat(end)})
+    let useruid =firebase.auth().currentUser.uid;
+    firebase.database().ref("users/"+useruid+"/"+id).remove();
+    
   };
  
   _renderItem = ({item,index}) => (
@@ -713,15 +718,15 @@ class MultiSelectList extends React.PureComponent {
   )
 
   _onPressFooterItem=()=>{
-    AddTimer();
+    AddTimer().then((x)=> this.setState({dataSource:timerObject}));
+   
   }
 
   render() {
       console.log(timerObject);
     return (
       <FlatList
-        data={this.props.data}
-        extraData={timerObject}
+        data={this.state.dataSource}
         keyExtractor={this._keyExtractor}
         renderItem={this._renderItem}
         horizontal={true}
