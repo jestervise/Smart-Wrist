@@ -49,31 +49,31 @@ let timerObject=[];
 function initializeFirebaseTimer(){
   let userId=firebase.auth().currentUser.uid;
   let firebaseUserRef=firebase.database().ref("users/"+userId);
-  firebaseUserRef.on('child_added',function (snapshot){
+  firebaseUserRef.on('value',function (snapshot){
     let counter =0;
     let tempObj={};
-    // const xa=Object.entries(snapshot.val());
-    // console.log(xa);
+    const xa=Object.entries(snapshot.val());
+    console.log(xa);
     // console.log("Snapshot Val"+JSON.stringify(snapshot.val()));
-    snapshot.forEach(childSnapshot=>{
-      if(counter ==0){
-        //Set the data getting from firebase to the date format
-        // let thisDate =new Date(childSnapshot.val());
-        // if(thisDate.getTime()<Date.now()){
-        //   snapshot.ref.remove();
-        //   console.log("removed")aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-        // }
-        tempObj['date']=childSnapshot.val();
-        counter++
-      }else if(counter ==1){
-        tempObj['time']=childSnapshot.val();
-        timerObject.push(tempObj);
-        tempObj={};
-        counter=0;
-      }
+    // snapshot.forEach(childSnapshot=>{
+    //   if(counter ==0){
+    //     //Set the data getting from firebase to the date format
+    //     // let thisDate =new Date(childSnapshot.val());
+    //     // if(thisDate.getTime()<Date.now()){
+    //     //   snapshot.ref.remove();
+    //     //   console.log("removed")
+    //     // }
+    //     tempObj['date']=childSnapshot.val();
+    //     counter++
+    //   }else if(counter ==1){
+    //     tempObj['time']=childSnapshot.val();
+    //     timerObject.push(tempObj);
+    //     tempObj={};
+    //     counter=0;
+    //   }
       
-    })
-    //console.log(timerObject);
+    // })
+    // //console.log(timerObject);
   });
 }
 
