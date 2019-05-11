@@ -50,30 +50,9 @@ function initializeFirebaseTimer(){
   let userId=firebase.auth().currentUser.uid;
   let firebaseUserRef=firebase.database().ref("users/"+userId);
   firebaseUserRef.on('value',function (snapshot){
-    let counter =0;
-    let tempObj={};
-    const xa=Object.entries(snapshot.val());
-    console.log(xa);
-    // console.log("Snapshot Val"+JSON.stringify(snapshot.val()));
-    // snapshot.forEach(childSnapshot=>{
-    //   if(counter ==0){
-    //     //Set the data getting from firebase to the date format
-    //     // let thisDate =new Date(childSnapshot.val());
-    //     // if(thisDate.getTime()<Date.now()){
-    //     //   snapshot.ref.remove();
-    //     //   console.log("removed")
-    //     // }
-    //     tempObj['date']=childSnapshot.val();
-    //     counter++
-    //   }else if(counter ==1){
-    //     tempObj['time']=childSnapshot.val();
-    //     timerObject.push(tempObj);
-    //     tempObj={};
-    //     counter=0;
-    //   }
-      
-    // })
-    // //console.log(timerObject);
+    timerObject=Object.entries(snapshot.val());
+    console.log(timerObject);
+    
   });
 }
 
@@ -705,36 +684,37 @@ class Timer extends Component {
 
 class MultiSelectList extends React.PureComponent {
   state = {selected: new Map()};
-  _keyExtractor = (item, index) =>item.id;
+  _keyExtractor = (item, index) =>item[0];
 
   DeleteTimer(){
 
   }
 
 
-  _onPressItem = (id) => {
-    console.log(id)
-    // updater functions are preferred for transactional updates
-    this.setState((state) => {
-      // copy the map rather than modifying state.
-      const selected = new Map(state.selected);
-      
-      selected.set(id, !selected.get(id)); // toggle
-      return {selected};
-    });
-    AddTimer();
+  _onPressItem = (id,index) => {
+    console.log(id +" "+ index)
+    let user =firebase.auth().currentUser;
+    firebase.database().ref("users/"+user+"/"+id).remove();
+    const start = timerObject.slice(0, index);
+    const end = timerObject.slice(index + 1);
+    timerObject= start.concat(end)
   };
  
-  _renderItem = ({item}) => (
+  _renderItem = ({item,index}) => (
    <MyListItem
-    id={item.id}
+    id={item[0]}
     onPressItem={this._onPressItem}
     selected={!!this.state.selected.get(item.id)}
-    date={item.date}
-    time={item.time}
+    date={item[1].date}
+    time={item[1].time}
+    index={index}
     DeleteTimer={this.DeleteTimer}
   />
   )
+
+  _onPressFooterItem=()=>{
+    AddTimer();
+  }
 
   render() {
       console.log(timerObject);
@@ -746,7 +726,7 @@ class MultiSelectList extends React.PureComponent {
         renderItem={this._renderItem}
         horizontal={true}
         vertical={false}
-        ListFooterComponent={<FooterComponent _onPressItem={this._onPressItem}/>}
+        ListFooterComponent={<FooterComponent _onPressFooterItem={this._onPressFooterItem}/>}
         showsHorizontalScrollIndicator={false}
       />
      
@@ -754,9 +734,10 @@ class MultiSelectList extends React.PureComponent {
   }
 }
 
+//Flat list last component
 const FooterComponent=(props)=>{
 
-    return < TouchableOpacity style={{top:'30%',justifyContent:'center',padding:20,}} onPress={props._onPressItem}>
+    return < TouchableOpacity style={{top:'30%',justifyContent:'center',padding:20,}} onPress={props._onPressFooterItem}>
     <FonTelloIcon size={100} name="plus-circled" color="#fff"/>
   </ TouchableOpacity >
  
@@ -774,6 +755,10 @@ class MyListItem extends React.PureComponent {
     this.setState({isShow:!this.state.isShow})
   };
 
+  removeItem=()=>{
+    this.props.onPressItem(this.props.id,this.props.index)
+  }
+
   render() {
     return (
       <View style={{flex:1,justifyContent:'center',alignItems:'center',
@@ -784,7 +769,7 @@ class MyListItem extends React.PureComponent {
               <Text style={{fontSize:20}}>{this.props.date+" "+this.props.time}</Text>
             </View>
             {/* Close Button for Delete timer*/}
-            <TouchableOpacity  style={{marginTop:20}} onPress={this.props.DeleteTimer}>
+            <TouchableOpacity  style={{marginTop:20}} onPress={this.removeItem}>
             <Icon name="md-close-circle" size={35} color="#FF5353"/>
             </TouchableOpacity>
             {/* Edit date time */}
