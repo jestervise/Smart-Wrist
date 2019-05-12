@@ -1,41 +1,13 @@
 import React, { Component } from 'react';
 import { 
-  View, Text, StyleSheet,TextInput, Button,DatePickerAndroid,
-  TimePickerAndroid,DatePickerIOS,Platform,ScrollView,
-  TouchableOpacity,TouchableNativeFeedback,Image,ImageBackground,Dimensions,FlatList,Alert,Animated,Easing,
-  Linking
+  View, Text, StyleSheet,Alert,Animated,Linking
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
-import LottieView from 'lottie-react-native';
 import styles from '../Styles'
-import {MiddleCircle,ProfileCircle,TimerCircle} from './SvgShapes'
 import firebase from './firebaseconfig';
-
-import StepsCounter from './StepsCounter'
-import Call from './Call'
-import Modal from 'react-native-modal'
-import {Calendar as RNCalendar} from 'react-native-calendars'
-import Expo,{Permissions,Location,ImagePicker,Calendar,LinearGradient,Font,IntentLauncherAndroid as IntentLauncher,Notifications} from 'expo'
-import {Overlay,Button as RNButton} from 'react-native-elements'
 import {createIconSetFromFontello} from '@expo/vector-icons';
 import fontelloConfig from '../assets/config.json';
-const FonTelloIcon = createIconSetFromFontello(fontelloConfig, 'c');
-var { height, width } = Dimensions.get("window");
-
-/**
- * - AppSwitchNavigator
- *    - WelcomeScreen
- *      - Login Button
- *      - Sign Up Button
- *    - AppDrawerNavigator
- *          - Dashboard - DashboardStackNavigator(needed for header and to change the header based on the                     tab)
- *            - DashboardTabNavigator
- *              - Tab 1 - FeedStack
- *              - Tab 2 - ProfileStack
- *              - Tab 3 - SettingsStack
- *            - Any files you don't want to be a part of the Tab Navigator can go here.
- */
-
+import { GradientHelper } from "./GradientHelper";
 import {
   createSwitchNavigator,
   createAppContainer,
@@ -43,106 +15,28 @@ import {
   createBottomTabNavigator,
   createStackNavigator
 } from 'react-navigation';
-import store from "../redux/store"
-let timerObject=[];
+import { Settings } from './Settings';
+import { Profile } from './Profile';
+import { Feed } from './Feed';
+import { Timer } from './Timer';
+export let timerObject=[];
+export const FonTelloIcon = createIconSetFromFontello(fontelloConfig, 'c');
 
-function initializeFirebaseTimer(){
-  let userId=firebase.auth().currentUser.uid;
-  let firebaseUserRef=firebase.database().ref("users/"+userId);
-  firebaseUserRef.on('value',function (snapshot){
+export function initializeFirebaseTimer() {
+  let userId = firebase.auth().currentUser.uid;
+  let firebaseUserRef = firebase.database().ref("users/" + userId);
+  firebaseUserRef.on('value', function (snapshot) {
     //if(snapshot.val()!=undefined)
     console.log(snapshot.val());
-      timerObject=snapshot.val()?Object.entries(snapshot.val()):[];
+    timerObject = snapshot.val() ? Object.entries(snapshot.val()) : [];
     console.log(timerObject);
-    
   });
 }
+//DACA
 
-async function writeUserData(userId,day,month,year,hour,minutes) {
-  timerObject=[];
-  let firebaseUserRef=firebase.database().ref("users/"+userId);
-  
-  let newTimerRef=firebaseUserRef.push();
-    newTimerRef.set({
-      date: day+"/"+month+"/"+year,
-      time:(hour<10?"0"+hour:hour )+":"+(minutes<10?"0"+minutes:minutes )
-  });
-  //Problem?
-  initializeFirebaseTimer();
-  return Promise.resolve("done")
-  
-
+export function setTimerObject(value){
+    timerObject=value
 }
-
-async function AddTimer(){
-  //Ask for reminder permission in IOS
- 
-  
-  if(Platform.OS=='android'){
-    //Date Picker
-    const {action, year, month, day}= await DatePickerAndroid.open();
-   
-    if (action !== DatePickerAndroid.dismissedAction) {
-      const { action ,hour, minute} = await TimePickerAndroid.open({
-        hour: new Date().getHours(),
-        minute: new Date().getMinutes(),
-        is24Hour: false, // Will display '2 PM'
-      });
-      if (action !== TimePickerAndroid.dismissedAction){
-        var uid = firebase.auth().currentUser.uid;
-        var remindersPermission=await Permissions.askAsync(Permissions.CALENDAR);
-          if(remindersPermission.status=="granted"){
-            createCalenderEvent(year,month+1,day,hour,minute)
-          }
-       
-       let done=await writeUserData(uid,day,month+1,year,hour,minute);
-       if(done=="done"){
-         return "done"
-       }
-        
-    }
-
-
-
-  }
-}
-}
-
-async function createCalenderEvent(year,month,day,hour,minute){
-  //Reformat the time 
-  hour<10?hour="0"+hour:hour;
-  minute<10?minutes="0"+minute:minute
-  month<10?month="0"+month:month
-
-  //Get the calendar in your local device
-  let calendars= await Calendar.getCalendarsAsync();
-  let calendarId;
-  calendarId= calendars[0].id;
-  //Set the date to the date selected by user
-  let date = new Date(year+"-"+month+"-"+day+"T"+hour+":"+minute+":"+"00");
-  //Offset the hour to gmt -8 to counter the gmt+8 setting in android
-  date.setHours(date.getHours()-8);
-  //Create the alarm event on the specific calendar with the calendar id
-  try{
-      var eventId=await Calendar.createEventAsync(calendarId, 
-        //Details of reminder
-        {title:'Smart Wrist: Take Pill',
-        startDate: date,
-        endDate: date,
-        allDay:false,
-        location:"Malaysia",
-        notes:"Take pill",
-        //Alert user through 
-        alarms:[{relativeOffset:0,method:"alert"}],
-        timeZone:"GMT+0",
-        accessLevel:'owner'
-    }).then((x)=>{console.log("result:"+ x)}).catch((x)=>{console.log("failure"+x)})
-  }catch(error){
-    console.log(error)
-  }
-   
-}
-
 
 class Home extends Component {
   constuctor (props){
@@ -156,654 +50,66 @@ export default Home;
 
 
 
-class DashboardScreen extends Component {
-  render() {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text>DashboardScreen</Text>
-      </View>
-    );
-  }
-}
+// const AnimatedGradientHelper = Animated.createAnimatedComponent(GradientHelper)
 
-class Feed extends Component {
-  constructor(props){
+const AnimatedGradientHelper = Animated.createAnimatedComponent(GradientHelper);
+
+class AnimatedGradient extends Component {
+  constructor(props) {
     super(props);
-    this.AddTimer= this.AddTimer.bind(this);
-    this.state={
-      isIOS:false,
-      chosenDate: new Date(),
-      location:null,
-      iconColor:"#fff"
-    }
-     this.getLocationAsync = this.getLocationAsync.bind(this);
+
+    const { colors } = props;
+    this.state = {
+      prevColors: colors,
+      colors,
+      tweener: new Animated.Value(0)
+    };
   }
 
-
-
-  async AddTimer(){
-    
-    
-  if(Platform.OS=='android'){
-    //Date Picker
-    const {action, year, month, day}= await DatePickerAndroid.open();
-   
-    if (action !== DatePickerAndroid.dismissedAction) {
-      const { action ,hour, minute} = await TimePickerAndroid.open({
-        hour: new Date().getHours(),
-        minute: new Date().getMinutes(),
-        is24Hour: false, // Will display '2 PM'
-      });
-      if (action !== TimePickerAndroid.dismissedAction){
-        var uid = firebase.auth().currentUser.uid;
-        writeUserData(uid,day,month+1,year,hour,minute).then(
-          ()=>this.props.navigation.navigate('TimerStack')
-        );
-        
-      }
-        
-    }
-    
-
-  }else{
-    this.setState({
-      isIOS:true
-    })
-  }
-    
+  static getDerivedStateFromProps(props, state) {
+    const { colors: prevColors } = state;
+    const { colors } = props;
+    const tweener = new Animated.Value(0);
+    return {
+      prevColors,
+      colors,
+      tweener
+    };
   }
 
-  componentWillMount(){
-    this.getLocationAsync();
-  }
-  
-  getLocationAsync = async ()=>{
-    let { status } = await Permissions.askAsync(Permissions.LOCATION);
-    console.log("they passed through here");
-    console.log(status);
-    if(status!=='granted'){
-      console.log(status);
-    }
-      
-    
-  }
-
-  componentDidMount(){
-    //Linking.openURL(`tel:${"0123456789"}`);
-  }
-
-  handleScroll=(event)=>{
-    if(event.nativeEvent.contentOffset.y>240)
-      this.setState({iconColor:'#000'})
-    else if(event.nativeEvent.contentOffset.y<10){
-      this.setState({iconColor:'#fff'})
-      console.log("pop")
-    }
-    else  
-      this.setState({iconColor:'#fff'})
+  componentDidUpdate() {
+    const { tweener } = this.state;
+    Animated.timing(tweener, {
+      toValue: 1
+    }).start();
   }
 
   render() {
-    return (
-        <View style={{ flex: 1, backgroundColor:'#EFEBE6'}}>
-        <View style={{position:'absolute', left:10,top:20,zIndex: 100,}}>
-          <Icon style={{ paddingLeft: 10,paddingTop:20 }} onPress={() => this.props.navigation.openDrawer()} name="md-menu" size={30} color={this.state.iconColor}/>
-        </View>
-        <View style={{position:'absolute', right:10,top:20,zIndex: 100,}}>
-          {/* Sign Out Button */}
-          <Icon name="md-log-out" size={30} color={this.state.iconColor} style={{paddingRight: 10,paddingTop:20}} onPress={
-                ()=>{
-                  Alert.alert("Sign Out","Are you sure?",
-                  [
-                    {text: 'Yes',style:'default', onPress: () => {
-                      firebase.auth().signOut().then(()=>{
-                        let user=firebase.auth.currentUser;
-                        if(user){
-                          return "logged in"
-                        }else{
-                          return "logged out"
-                        }
-                      }).then((logged)=>{
-                        if(logged=="logged out"){
-                          console.log(logged);
-                          navigation.navigate('ProfileStack');// Navigate ProfileStack
-                        }
-                      }).catch((error)=>console.log(error))
-                    }},//Alert Button Yes
-                    {text: 'No' ,style:'cancel'},//Alert Button No
-                  ]//AlertButton
-                  );
-                
-              }
-              }/>
-        </View>
-        <ScrollView keyboardShouldPersistTaps="never" onScroll={this.handleScroll}>
-          <ImageBackground resizeMode='contain' style={{flex:1,flexDirection:'column',justifyContent:'space-between',alignItems:'center',width:'100%',height:height*(64/100),marginBottom: '5%',marginTop:0,paddingTop:0,top:-20}}source={require("../assets/dashboardBackground.png")}>
-          
-            <MiddleCircle />
-            <Call />
-          <TouchableOpacity  style={{flex:0.1,marginBottom:20}} onPress={() => this.props.navigation.navigate('Detail')}>
-          <Text style={{color:'#fff'}}>More Details <Icon name="md-arrow-dropdown" size={18} color="#fff"/></Text>
-          </TouchableOpacity>
-          </ImageBackground>
-          {/* <Button title="Go To Detail Screen" onPress={() => this.props.navigation.navigate('Detail')} /> */}
-          <DashBoardButton iconLocation={require("../assets/AddTimerIcon.png")} text={{header:"Add Timer",desc:'Remind you to eat medicine'}} func={this.AddTimer} rightButton="md-add-circle-outline"/>
-          {this.state.isIOS && <Modal>
-            <View>
-            <DatePickerIOS date={this.state.chosenDate} onDateChange={(newDate)=>{ this.setState({chosenDate: newDate});}}
-          /></View>
-          </Modal>
-          }
-          
-          <DashBoardButton iconLocation={require("../assets/AddTimerIcon.png")} text={{header:"Movement Report",desc:'Check your movement'}} func={this.AddTimer} rightButton="md-add-circle-outline"/>
-          
-          {
-            this.state.isIOS && <Button title="Submit" onPress={()=>
-              {this.props.navigation.navigate('TimerStack',{year:year,month:month,day:day});}}/>
-          }  
+    const { tweener, prevColors, colors } = this.state;
 
-          <Button title="PlacehodlerButton" onPress={() => this.props.navigation.navigate('Detail')} />
-        </ScrollView>
-        <StepsCounter />
-      </View>
-    );
-  }
+    const { style } = this.props;
 
-    
-}
-
-class DashBoardButton extends Component{
-  render(){
-    return <View style={styles.dashboardButtonStyle}>
-      <Image source={this.props.iconLocation} resizeMode='contain' style={{ width: 118.56, height: 102.6, flex: 1 }} />
-      <View style={{ margin: 5, width: '35%' }}>
-        <Text style={{ fontWeight: 'bold' }}>{this.props.text.header}</Text>
-        <Text style={styles.dashboardTextStyle}>{this.props.text.desc}</Text>
-      </View>
-      <TouchableOpacity onPress={this.props.func}>
-        <Icon name={this.props.rightButton} size={34} color="#FF5A5A" />
-      </TouchableOpacity>
-    </View>;
-  }
-  
-}
-
-
-class Settings extends Component {
-  render() {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      
-        <ImageBackground source={require("../assets/settings_background.png")} style={{width:'100%',height:'100%'}}>
-        <Icon name="md-settings" size={34} color="#fff" style={{alignSelf:'flex-end',margin:10,paddingTop:40}}/>
-        <ScrollView>
-          <Image source={require("../assets/bubble.png")} style={{marginLeft:20,marginBottom:5}}/>
-          <SettingsObject/>
-          <SettingsObject/>
-          <SettingsObject/>
-          <SettingsObject/>
-          <SettingsObject/>
-          <SettingsObject/>
-        </ScrollView>
-       </ImageBackground>
-      
-        
-      </View>
-    );
-  }
-
- 
-}
-
-const SettingsObject=()=> {
-  return <View style={{ backgroundColor: '#FF5858', marginLeft: 10, marginRight: 10, marginBottom:2,height: 50, flexDirection: 'row',elevation:3 }}>
-    <Text style={{ color: '#fff', alignSelf: 'center', paddingLeft: 20 }}>Color!!</Text>
-  </View>;
-}
-
-
-class Profile extends Component {
-  headerImage=function(){
-    return firebase.storage().ref().child("images/profileImage"+firebase.auth().currentUser.uid)
-  }
-
-  
-  constructor(props){
-    super(props);
-    this.state={
-      location:null,
-      displayName:firebase.auth().currentUser.displayName==undefined?
-      firebase.auth().currentUser.email:firebase.auth().currentUser.displayName,
-      editable:false,
-      image:require("../assets/placeholderProfilePic.png"),
-      isVisible:false,
-      showPhotoSelection:false
-    }
-    
-    this.textInput = React.createRef();
-    this.ChooseFromGalleryAsync= this.ChooseFromGalleryAsync.bind(this)
-    this.TakePhotoAsync = this.TakePhotoAsync.bind(this)
-    
-  }
-  
-  componentWillMount(){
-    this.initializeHeaderImage();
-    this.getLocationAsync();
-  }
-
-  async initializeHeaderImage(){
-    //when component mount, download image from firebase storage and set it profile header
-    const url =await this.headerImage().getDownloadURL();
-    console.log(url)
-    if(url)
-      this.setState({image:{uri:url}})
-  }
-
-  async getLocationAsync(){
-      //If location services is enabled
-      let enabled=await Location.hasServicesEnabledAsync();
-      if(enabled){
-        //get current location 
-        let location = await Location.getCurrentPositionAsync({});
-        let locationAddress =await Location.reverseGeocodeAsync({latitude:location.coords.latitude,longitude:location.coords.longitude});
-        this.setState({location:locationAddress});
-      }else{
-        //If no location enabled, navigate user location settings to enable
-        Alert.alert("Reminder","Please Turn On The Location Services",
-        [{text: 'OK', onPress: async () => {
-          let x=await IntentLauncher.startActivityAsync(IntentLauncher.ACTION_LOCATION_SOURCE_SETTINGS)
-        //If done, observe user location, and when location changed,reset user location
-          if(x)
-          Location.watchPositionAsync({},async (location)=>{
-            console.log(location)
-            let locationAddress =await Location.reverseGeocodeAsync({latitude:location.coords.latitude,longitude:location.coords.longitude});
-            this.setState({location:locationAddress});
-          })
-          }
-        },
-        {
-          text: 'Cancel',
-          onPress: () => console.log('Cancel Pressed'),
-          style: 'cancel',
-        }]
-        )
-
-      }
-      
-    
-  
-  }
-  
-  //When change display name button is clicked,make the username editable and focus username
-  ChangeDisplayName(){
-    this.setState({editable:true});
-    this.textInput.current.focus();
-  }
-
-  //if submit on click,make it ineditable and update the specific user's display name
-  SaveDisplayName(){
-    this.setState({editable:false});
-    firebase.auth().currentUser.updateProfile({
-      displayName:this.state.displayName
-    }).then(()=> console.log(firebase.auth().currentUser.displayName));
-
-  }
-
-  //when open calendar's button on click, turn the overlay popup visibility on and show calendar
-  OpenCalender(){
-    console.log("Open Calender method")
-    this.setState({isVisible:true});
-  }
-
-  //when profile header button on click, turn the overlay popup visibility on and show "take photo",
-  //"choose from gallery" options
-  ChoosePhoto(){
-     this.setState({showPhotoSelection:true})      
-  }
-  
-  //If "take photo option is selected"
-  async TakePhotoAsync(){
-    console.log("Take Photo method")
-    
-    //Ask for camera permissions
-    let persmissions= await Permissions.askAsync(Permissions.CAMERA);
-    //When it grants the permission, launch camera and hide choosePhotoSelection popup
-    if(persmissions.status=="granted")
-      var result=await ImagePicker.launchCameraAsync();
-      this.setState({showPhotoSelection:false});
-      //Then upload to firebase storage
-      if(!result.cancelled)
-          this.UploadToStorage(result.uri);
-    
-  }
-
-  //If "choose from gallery option is selected"
-  async ChooseFromGalleryAsync(){
-    console.log("Gallery method")
-    if(Platform.OS=='ios'){
-      Permissions.askAsync(Permissions.CAMERA_ROLL).then(()=>
-      ImagePicker.launchImageLibraryAsync({mediaTypes:'Images',allowsEditing:true})
-      );
-    }else{
-      let result = await ImagePicker.launchImageLibraryAsync({mediaTypes:'Images'})
-      this.setState({showPhotoSelection:false})
-      if(!result.cancelled)
-        this.UploadToStorage(result.uri);
-  
-     }
-  }
-
-  //Establish connection to local storage,Set the header image to selected photo, and upload the image
-  async UploadToStorage(uri){
-    const blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function() {
-        resolve(xhr.response);
-      };
-      xhr.onerror = function(e) {
-        console.log(e);
-        reject(new TypeError('Network request failed'));
-      };
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
+    const color1Interp = tweener.interpolate({
+      inputRange: [0, 1],
+      outputRange: [prevColors[0], colors[0]]
     });
-     
-   
-    this.setState({image:{uri:uri}});
-    let snapshot=await this.headerImage().put(blob)
-    
-    
-    blob.close();
-  }
-  
 
-  render() {
-    let location="Loading";
-    let  image  = this.state.image;
-    //Format the location data to state and country
-    if(this.state.location){
-      location = this.state.location[0].region+","+this.state.location[0].country
-    }
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      {/* Calendar Pop Up */}
-      <Overlay onBackdropPress={()=>{this.setState({isVisible:false})}} isVisible={this.state.isVisible} style={{flex:1,justifyContent:'space-between'}}>
-      <Text style={{fontWeight:'bold',fontSize:20,textAlign:'center'}}>Calender</Text>
-      
-        <RNCalendar/>
-        <RNButton title="CLOSE" onPress={()=>this.setState({isVisible:false})}/>
-      </Overlay>
-      {/* Choose From Gallery or Take Picture */}
-      <Overlay onBackdropPress={()=>{this.setState({showPhotoSelection:false})}} isVisible={this.state.showPhotoSelection} height="20%" style={{flex:1,justifyContent:'space-around',alignItems: 'center',}}>
-        <TouchableOpacity style={{flex:1,alignItems:'center'}} onPress={this.TakePhotoAsync}>
-          <Text style={{fontSize:17}}>Take a Photo</Text>
-          
-        </TouchableOpacity>
-        <TouchableOpacity style={{flex:1,alignItems:'center'}} onPress={this.ChooseFromGalleryAsync}>
-          <Text style={{fontSize:17}}>Choose From Gallery</Text>
-        </TouchableOpacity>
-      </Overlay>
-      {/* Header Picture */}
-       <ImageBackground source={this.state.image} 
-       style={{top:0,width:'100%',position:'absolute',height:height*0.4}}>
-       <View style={{flexDirection:'row',justifyContent:'space-between',paddingTop:20}}>
-          <CalenderComponent OpenCalender={this.OpenCalender.bind(this)}/>
-          <EditBanner ChoosePhoto={this.ChoosePhoto.bind(this)}/>
-       </View>
-       <ProfileCircle/>
-       </ImageBackground>
-       {/* username and location tag */}
-        <View style={{top:'5%',marginTop:'5%',left:'10%',width:"65%"}}>
-          <View style={{flexDirection:'row'}}>
-            <TextInput ref={this.textInput} value={this.state.displayName} editable={this.state.editable} onSubmitEditing={this.SaveDisplayName.bind(this)}
-             onChangeText={(text)=>this.setState({displayName:text})} style={{color:"#F68909",fontSize:15,textAlign:"left",fontWeight:'bold'}}/>
-            <EditUserName ChangeDisplayName={this.ChangeDisplayName.bind(this)}/>
-          </View>
-          <View style={{flexDirection:'row',paddingTop:5}}>
-            <Icon name="md-pin" size={12} color="#FF5353" />
-          <Text style={{paddingLeft:10,color:'#FF5353',fontSize:12,textAlign:'left'}}>{location}</Text>
-          </View>
-        </View>
-      </View>
-    );
-  }
-}
-
-//Profile's Function Component/Icons in Profile page
-const EditBanner=(props)=>{return <TouchableOpacity onPress={props.ChoosePhoto}>
-<Icon name="md-create" size={23} color="#FFAEAE" style={{paddingRight:20,paddingTop:20}}/>
-</TouchableOpacity>}
-const CalenderComponent =(props)=> {return <TouchableOpacity onPress={props.OpenCalender}>
-<Icon name="md-calendar" size={25} color="#FFAEAE" style={{paddingLeft:20,paddingTop:20}}/>
-</TouchableOpacity>}
-
-const EditUserName=(props)=>{
-  return <TouchableOpacity onPress={props.ChangeDisplayName}>
-        <Icon name="md-create" size={15} color="#FF5353" style={{paddingLeft:10}}/>
-    </TouchableOpacity>
-}
-
-class Timer extends Component {
-  constructor(props){
-    super(props);
-    initializeFirebaseTimer();
-    this.state={
-      renderText:timerObject.length,
-      fontLoaded:false,
-      showButton:true,
-      endAnim:false,
-      killButton:false,
-      checkOutButtonProgress: new Animated.Value(0)
-    }
-
-    this.AddTimer=this.AddTimer.bind(this);
-  }
-  
-  comp
-
- 
-  async AddTimer(){
-    
-    
-    if(Platform.OS=='android'){
-      //Date Picker
-      const {action, year, month, day}= await DatePickerAndroid.open();
-     
-      if (action !== DatePickerAndroid.dismissedAction) {
-        const { action ,hour, minute} = await TimePickerAndroid.open({
-          hour: new Date().getHours(),
-          minute: new Date().getMinutes(),
-          is24Hour: false, // Will display '2 PM'
-        });
-        if (action !== TimePickerAndroid.dismissedAction){
-          var uid = firebase.auth().currentUser.uid;
-          this.AddAlarmAnimation().then(writeUserData(uid,day,month+1,year,hour,minute))
-          
-        }
-          
-      }
-      
-  
-    }  
-  }
-
-  async AddAlarmAnimation(){
-    console.log("go through here");
-    this.setState({showButton:false});
-    return await Animated.timing(this.state.checkOutButtonProgress,{
-      toValue:1,
-      duration:1500,
-      easing:Easing.linear,
-      delay:500
-    }).start(()=>{this.setState({showButton:true,killButton:true})
-  })
-  }
-
-  async componentDidMount() {
-    Font.loadAsync({
-      "c": require('../assets/fonts/c.ttf')
-    }).then(()=>this.setState({fontLoaded: true}));
-
-  
-    
-  }
-
-  render() {
-
+    const color2Interp = tweener.interpolate({
+      inputRange: [0, 1],
+      outputRange: [prevColors[1], colors[1]]
+    });
 
     return (
-      
-
-      <LinearGradient  colors={['#FA9014', '#FF5050']} style={{  flex: 1,  justifyContent: 'center'}} >
-        <TimerCircle />
-        <View style={{flex:0.2,alignItems:'flex-start',padding:40,}}>
-         <View>
-            <Text>This is top quote</Text>
-          </View>
-        </View>
-        <View style={{flex:0.8,justifyContent:'flex-start',alignItems:'center',flexDirection:'column',height:'100%'}}>
-        {/* Alarm Card */}
-         {this.state.renderText!=0? 
-         <MultiSelectList data={timerObject} style={{justifyContent: 'center',alignItems:'center'}} DeleteTimer={this.props.DeleteTimer}/>:
-          this.state.fontLoaded?
-          <View style={{flex:1,justifyContent:'center',alignItems:'center',backgroundColor:'white',margin: '10%',width:width*0.8,borderRadius:20,elevation:20}}>
-            {this.state.showButton && !this.state.killButton && < TouchableOpacity  onPress={this.AddTimer}>
-               <FonTelloIcon size={100} name="plus-circled" color="#FF5050" />
-             </ TouchableOpacity >
-            }
-             {!this.state.showButton && <LottieView source={require("../assets/check_mark_success.json")} progress={this.state.checkOutButtonProgress}/>} 
-          </View>:
-          null
-          
-        }
-          
-        </View>
-        
-         {/* {console.log(this.state.renderText)} */}
-         </LinearGradient>
-  
-    
-    );
-  }
-}
-
-class MultiSelectList extends React.PureComponent {
-  state = {selected: new Map(),dataSource:timerObject};
-  _keyExtractor = (item, index) =>item[0];
-
-  DeleteTimer(){
-
-  }
-
-
-  _onPressItem = (id,index) => {
-    const start = timerObject.slice(0, index);
-    const end = timerObject.slice(index + 1);
-    timerObject.splice(index,1)
-    this.setState({dataSource:start.concat(end)})
-    let useruid =firebase.auth().currentUser.uid;
-    firebase.database().ref("users/"+useruid+"/"+id).remove();
-    
-  };
- 
-  _renderItem = ({item,index}) => (
-   <MyListItem
-    id={item[0]}
-    onPressItem={this._onPressItem}
-    selected={!!this.state.selected.get(item.id)}
-    date={item[1].date}
-    time={item[1].time}
-    index={index}
-    DeleteTimer={this.DeleteTimer}
-  />
-  )
-
-  _onPressFooterItem=()=>{
-    AddTimer().then((x)=> this.setState({dataSource:timerObject}));
-   
-  }
-
-  render() {
-      console.log(timerObject);
-    return (
-      <FlatList
-        data={this.state.dataSource}
-        keyExtractor={this._keyExtractor}
-        renderItem={this._renderItem}
-        horizontal={true}
-        vertical={false}
-        ListFooterComponent={<FooterComponent _onPressFooterItem={this._onPressFooterItem}/>}
-        showsHorizontalScrollIndicator={false}
+      <AnimatedGradientHelper
+        style={style || styles.component}
+        color1={color1Interp}
+        color2={color2Interp}
       />
-     
     );
   }
 }
 
-//Flat list last component
-const FooterComponent=(props)=>{
-
-    return < TouchableOpacity style={{top:'30%',justifyContent:'center',padding:20,}} onPress={props._onPressFooterItem}>
-    <FonTelloIcon size={100} name="plus-circled" color="#fff"/>
-  </ TouchableOpacity >
- 
-}
- 
-
-
-class MyListItem extends React.PureComponent {
-  state={
-    isShow:false,
-    date:""
-  }
-  _onPress = () => {
-    //this.props.onPressItem(this.props.id);
-    this.setState({isShow:!this.state.isShow})
-  };
-
-  removeItem=()=>{
-    this.props.onPressItem(this.props.id,this.props.index)
-  }
-
-  render() {
-    return (
-      <View style={{flex:1,justifyContent:'center',alignItems:'center',
-      flexDirection:'column',backgroundColor:'white',height:'70%',width:width*0.8,
-      margin:40,borderRadius:20,elevation:20}}>
-            {/* Display date time */}
-            <View style={{justifyContent:'center'}}>
-              <Text style={{fontSize:20}}>{this.props.date+" "+this.props.time}</Text>
-            </View>
-            {/* Close Button for Delete timer*/}
-            <TouchableOpacity  style={{marginTop:20}} onPress={this.removeItem}>
-            <Icon name="md-close-circle" size={35} color="#FF5353"/>
-            </TouchableOpacity>
-            {/* Edit date time */}
-            <TouchableOpacity onPress={this._onPress} style={{position:'absolute',right:10,top:10}}>
-              <Icon  name="md-create" size={25} color="#FF5353" style={{padding:10}}/>
-            </TouchableOpacity>
-             {/* Edit date time overlay screen */}
-            <Overlay isVisible={this.state.isShow} onBackdropPress={this._onPress} 
-            style={{justifyContent:'center',alignItems: 'center',}}>
-            <View style={{justifyContent:'center'}}>
-              <TextInput onFocus={async ()=>{ 
-                const {action, year, month, day}= await DatePickerAndroid.open();
-                if(action!=DatePickerAndroid.dismissedAction)
-                  this.setState({date:day+"/"+month+"/"+year})
-                  
-                }} value={this.state.date} placeholder="Please choose the date" style={{padding:20}}/>
-              <RNButton title={"CLOSE"}  onPress={this._onPress}/>
-            </View>
-            </Overlay>
-      </View>
-     
-    );
-  }
-}
-
-const Detail = props => (
-  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+const Detail = props => (<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
     <Text>Detail</Text>
   </View>
 );
