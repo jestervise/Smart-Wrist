@@ -1,12 +1,11 @@
 import React,{Component} from 'react'
 import Icon from '@expo/vector-icons/Ionicons'
-import {TouchableOpacity,Alert,FlatList,View} from 'react-native'
+import {TouchableOpacity,Alert,FlatList,View,Linking} from 'react-native'
 import {Contacts,Permissions} from 'expo'
 import {connect} from 'react-redux'
 import {toggleContactListOn} from '../redux/actions'
 import { Button,Text, } from 'react-native-elements';
-import ContactList from './ContactList'
-
+import ContactList,{caregiver} from './ContactList'
 
 
 let x=0;
@@ -22,49 +21,53 @@ class Call extends Component{
 
 
     async OpenContact(){
-        //Ask for get contact permission 
-        const {status}=await Permissions.askAsync(Permissions.CONTACTS);
-        //If success
-        if(status==='granted'){
-            //Get the permission and...
-            return  Permissions.getAsync(Permissions.CONTACTS).then((x)=>{
-                //not granted prompt to enable permission
-                if(x.status!=='granted'){
-                    console.log(x);
-                    Alert.alert("Please enable permission for accessing phone contacts");
-                }
-                else{
-                    //else get phone contact with formats
-                    Contacts.getContactsAsync({
-                        fields: [
-                          Contacts.PHONE_NUMBERS,
-                          Contacts.EMAILS,
-                        ],
-                        pageSize: 10,
-                        pageOffset: 0,
-                      }).
-                    then(
-                        (contact)=>{
-                            //Then prompt user the contacts
-                            if(this.contact==undefined)
-                                this.contact=<ContactList contact={contact}/>
-                            this.props.toggleContactListOn();
-                            
-                            
-                           
-                            
-                        }
-                        ).catch((error)=>{
-                    console.log(error);
-                })
-                } 
-                
-                }).
-                catch((error)=>{console.log(error)});
-        }else{
-            Alert.alert("Please enable contact access permission")
+        if(caregiver){
+            Linking.openURL(`tel:${"0123456789"}`);
         }
-        
+        else{
+            //Ask for get contact permission 
+            const {status}=await Permissions.askAsync(Permissions.CONTACTS);
+            //If success
+            if(status==='granted'){
+                //Get the permission and...
+                return  Permissions.getAsync(Permissions.CONTACTS).then((x)=>{
+                    //not granted prompt to enable permission
+                    if(x.status!=='granted'){
+                        console.log(x);
+                        Alert.alert("Please enable permission for accessing phone contacts");
+                    }
+                    else{
+                        //else get phone contact with formats
+                        Contacts.getContactsAsync({
+                            fields: [
+                              Contacts.PHONE_NUMBERS,
+                              Contacts.EMAILS,
+                            ],
+                            pageOffset: 0,
+                          }).
+                        then(
+                            (contact)=>{
+                                //Then prompt user the contacts
+                                if(this.contact==undefined)
+                                    this.contact=<ContactList contact={contact}/>
+                                this.props.toggleContactListOn();
+                                
+                                
+                               
+                                
+                            }
+                            ).catch((error)=>{
+                        console.log(error);
+                    })
+                    } 
+                    
+                    }).
+                    catch((error)=>{console.log(error)});
+            }else{
+                Alert.alert("Please enable contact access permission")
+            }
+
+        }
       
     }
 

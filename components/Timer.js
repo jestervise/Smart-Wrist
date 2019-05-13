@@ -126,7 +126,9 @@ class MultiSelectList extends React.PureComponent {
     let useruid = firebase.auth().currentUser.uid;
     firebase.database().ref("users/" + useruid + "/" + id).remove();
   };
-  _renderItem = ({ item, index }) => (<MyListItem id={item[0]} onPressItem={this._onPressItem} selected={!!this.state.selected.get(item.id)} date={item[1].date} time={item[1].time} index={index} DeleteTimer={this.DeleteTimer} />);
+  _renderItem = ({ item, index }) => (<MyListItem id={item[0]} onPressItem={this._onPressItem} 
+    selected={!!this.state.selected.get(item.id)} date={item[1].date} 
+    time={item[1].time} index={index} DeleteTimer={this.DeleteTimer} />);
   _onPressFooterItem = () => {
     AddTimer().then((x) => this.setState({ dataSource: timerObject }));
   };
@@ -139,7 +141,11 @@ class MultiSelectList extends React.PureComponent {
   };
   render() {
     console.log(timerObject);
-    return (<FlatList data={this.state.dataSource} keyExtractor={this._keyExtractor} renderItem={this._renderItem} horizontal={true} vertical={false} onViewableItemsChanged={this.onViewableItemsChanged} ListFooterComponent={<FooterComponent _onPressFooterItem={this._onPressFooterItem} />} showsHorizontalScrollIndicator={false} />);
+    return (<FlatList data={this.state.dataSource} keyExtractor={this._keyExtractor} 
+      renderItem={this._renderItem} horizontal={true} vertical={false} 
+      onViewableItemsChanged={this.onViewableItemsChanged} 
+      ListFooterComponent={<FooterComponent _onPressFooterItem={this._onPressFooterItem} />} 
+      showsHorizontalScrollIndicator={false} />);
   }
 }
 //Flat list last component

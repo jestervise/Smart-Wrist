@@ -32,7 +32,6 @@ export function initializeFirebaseTimer() {
     console.log(timerObject);
   });
 }
-//DACA
 
 export function setTimerObject(value){
     timerObject=value

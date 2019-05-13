@@ -62,12 +62,13 @@ export class Feed extends Component {
   componentDidMount() {
     //Linking.openURL(`tel:${"0123456789"}`);
   }
+
+  //If user were to scroll to certain point, change the icon color to black
   handleScroll = (event) => {
     if (event.nativeEvent.contentOffset.y > 240)
       this.setState({ iconColor: '#000' });
     else if (event.nativeEvent.contentOffset.y < 10) {
       this.setState({ iconColor: '#fff' });
-      console.log("pop");
     }
     else
       this.setState({ iconColor: '#fff' });
