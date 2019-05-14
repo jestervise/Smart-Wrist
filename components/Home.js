@@ -22,7 +22,7 @@ import { Timer } from './Timer';
 export let timerObject=[];
 export const FonTelloIcon = createIconSetFromFontello(fontelloConfig, 'c');
 
-export function initializeFirebaseTimer() {
+export async function initializeFirebaseTimer() {
   let userId = firebase.auth().currentUser.uid;
   let firebaseUserRef = firebase.database().ref("users/" + userId);
   firebaseUserRef.on('value', function (snapshot) {
@@ -31,6 +31,7 @@ export function initializeFirebaseTimer() {
     timerObject = snapshot.val() ? Object.entries(snapshot.val()) : [];
     console.log(timerObject);
   });
+  return Promise.resolve("done")
 }
 
 export function setTimerObject(value){

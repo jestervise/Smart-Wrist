@@ -14,9 +14,9 @@ export class Settings extends Component {
   }
 
   render() {
-    return (<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-
-      <ImageBackground source={require("../assets/settings_background.png")} style={{ width: '100%', height: '100%' }}>
+    return (<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center',backgroundColor:'#F8BE02' }}>
+      
+      <View source={require("../assets/settings_background.png")} style={{ width: '100%', height: '100%' }}>
         <Icon name="md-settings" size={34} color="#fff" style={{ alignSelf: 'flex-end', margin: 10, paddingTop: 40 }} />
         <View style={{backgroundColor:'white',width:'95%',margin:10,height:'0.4%',opacity:0.7}}></View>
         <View style={{ marginLeft: 20, marginBottom: 10,marginTop:20,flexDirection:'row' }}>
@@ -26,7 +26,7 @@ export class Settings extends Component {
         <ScrollView>
           {this.settingsComponent}
         </ScrollView>
-      </ImageBackground>
+      </View>
 
 
     </View>);

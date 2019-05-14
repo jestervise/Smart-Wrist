@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, TextInput, DatePickerAndroid, TimePickerAndroid, Platform, 
-    TouchableOpacity, FlatList, Animated, Easing,Dimensions } from 'react-native';
+    TouchableOpacity, FlatList, Animated, Easing,Dimensions,ImageBackground } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import LottieView from 'lottie-react-native';
 import { TimerCircle } from './SvgShapes';
@@ -16,7 +16,8 @@ var { height, width } = Dimensions.get("window");
 
 export class Timer extends Component {
   colors = [/* yellow orange */["#FFC73B", "#FF603B"], /* Default orange red */['#FA9014', '#FF5050'],
-        /* yellow orange */["#FF563B", "#FFCE3B"], /* blueish */["#29FFB4", "#5A28FF"], /* light yellow orange */["#FFFC0D", "#FF5E0E"]];
+        /* yellow orange */["#eaafc8", "#654ea3"], /* blueish */["#29FFB4", "#5A28FF"], /* light yellow orange */["#FF4B2B", "#FF416C"],
+        ["#00B4DB","#0083B0"],["#FFFDE4","#005AA7"],["#a2ab58","#636363"],["#ad5389","#3c1053"],["#a8c0ff","#3f2b96"]];
   constructor(props) {
     super(props);
     //Get the timer details from database
@@ -87,17 +88,21 @@ export class Timer extends Component {
     return Math.floor(Math.random() * Math.floor(max));
   }
   render() {
-    return (<LinearGradient colors={this.state.backgroundGradient} style={{ flex: 1, justifyContent: 'center' }}>
+  
+    return ( 
+     <ImageBackground source={require("../assets/reminderBackground.jpg") } style={{width:'100%',height:'100%'}}>
+    <LinearGradient colors={this.state.backgroundGradient} style={{ flex: 1, justifyContent: 'center',opacity:0.7}}>
       <TimerCircle />
       <View style={{ flex: 0.2, alignItems: 'flex-start', padding: 40, }}>
-        <View>
-          <Text>This is top quote</Text>
+        <View style={{flexDirection:'row', padding:20,justifyContent:'space-around'}}>
+          <Text style={{fontWeight:'bold',fontSize:30,color:'white'}}>Reminder</Text>
+          <Icon name="md-alarm" size={27} color="white" style={{paddingLeft: 20,elevation:30}}/>
         </View>
       </View>
       <View style={{ flex: 0.8, justifyContent: 'flex-start', alignItems: 'center', flexDirection: 'column', height: '100%' }}>
 
         {this.state.renderText != 0 ?
-          <MultiSelectList data={timerObject} style={{ justifyContent: 'center', alignItems: 'center' }} DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor} /> :
+          <MultiSelectList data={timerObject} backgroundColor={this.state.backgroundGradient} style={{ justifyContent: 'center', alignItems: 'center' }} DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor} /> :
           this.state.fontLoaded ?
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', margin: '10%', width: width * 0.8, borderRadius: 20, elevation: 20 }}>
               {this.state.showButton && !this.state.killButton && <TouchableOpacity onPress={this.AddTimer}>
@@ -110,7 +115,9 @@ export class Timer extends Component {
       </View>
 
 
-    </LinearGradient>);
+    </LinearGradient>
+   </ImageBackground>
+    );
   }
 }
 class MultiSelectList extends React.PureComponent {
@@ -128,7 +135,7 @@ class MultiSelectList extends React.PureComponent {
   };
   _renderItem = ({ item, index }) => (<MyListItem id={item[0]} onPressItem={this._onPressItem} 
     selected={!!this.state.selected.get(item.id)} date={item[1].date} 
-    time={item[1].time} index={index} DeleteTimer={this.DeleteTimer} />);
+    time={item[1].time} backgroundColor={this.props.backgroundColor} index={index} DeleteTimer={this.DeleteTimer} />);
   _onPressFooterItem = () => {
     AddTimer().then((x) => this.setState({ dataSource: timerObject }));
   };
@@ -173,26 +180,27 @@ class MyListItem extends React.PureComponent {
       margin: 40, borderRadius: 20, elevation: 20
     }}>
 
-      <View style={{ justifyContent: 'center' }}>
-        <Text style={{ fontSize: 20 }}>{this.props.date + " " + this.props.time}</Text>
+      <View style={{ justifyContent: 'center',alignItems:'center' }}>
+        <Text style={{ fontSize: 20,color:this.props.backgroundColor[1] }}>{this.props.date}</Text>
+        <Text style={{ fontSize: 20,color:this.props.backgroundColor[1] }}>{this.props.time}</Text>
       </View>
 
       <TouchableOpacity style={{ marginTop: 20 }} onPress={this.removeItem}>
-        <Icon name="md-close-circle" size={35} color="#FF5353" />
+        <Icon name="md-close-circle" size={35} color={this.props.backgroundColor[1]} />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={this._onPress} style={{ position: 'absolute', right: 10, top: 10 }}>
-        <Icon name="md-create" size={25} color="#FF5353" style={{ padding: 10 }} />
+        <Icon name="md-create" size={25} color={this.props.backgroundColor[1]} style={{ padding: 10 }} />
       </TouchableOpacity>
 
-      <Overlay isVisible={this.state.isShow} onBackdropPress={this._onPress} style={{ justifyContent: 'center', alignItems: 'center', }}>
+      <Overlay isVisible={this.state.isShow} overlayStyle={{opacity:0.9,}} onBackdropPress={this._onPress} style={{ justifyContent: 'center', alignItems: 'center', }}>
         <View style={{ justifyContent: 'center' }}>
           <TextInput onFocus={async () => {
             const { action, year, month, day } = await DatePickerAndroid.open();
             if (action != DatePickerAndroid.dismissedAction)
               this.setState({ date: day + "/" + month + "/" + year });
           }} value={this.state.date} placeholder="Please choose the date" style={{ padding: 20 }} />
-          <RNButton title={"CLOSE"} onPress={this._onPress} />
+          <RNButton buttonStyle={{backgroundColor:this.props.backgroundColor[1]}} title={"CLOSE"} onPress={this._onPress} raised={true}/>
         </View>
       </Overlay>
     </View>);
