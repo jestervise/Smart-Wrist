@@ -20,8 +20,6 @@ export class Timer extends Component {
         ["#00B4DB","#0083B0"],["#FFFDE4","#005AA7"],["#a2ab58","#636363"],["#ad5389","#3c1053"],["#a8c0ff","#3f2b96"]];
   constructor(props) {
     super(props);
-    //Get the timer details from database
-    initializeFirebaseTimer();
     this.state = {
       renderText: timerObject.length,
       fontLoaded: false,
@@ -48,7 +46,11 @@ export class Timer extends Component {
         if (action !== TimePickerAndroid.dismissedAction) {
           var uid = firebase.auth().currentUser.uid;
           createCalenderEvent(year, month + 1, day, hour, minute);
-          this.AddAlarmAnimation().then(writeUserData(uid, day, month + 1, year, hour, minute));
+          this.AddAlarmAnimation().then(()=>writeUserData(uid, day, month + 1, year, hour, minute)).
+          then((done)=>{
+            if(done="done")
+              this.setState({renderText:timerObject.length})
+          });
         }
       }
     }
@@ -71,6 +73,11 @@ export class Timer extends Component {
     Font.loadAsync({
       "c": require('../assets/fonts/c.ttf')
     }).then(() => this.setState({ fontLoaded: true }));
+
+     //Get the timer details from database
+     initializeFirebaseTimer().then((x)=>{if(x=="done"){
+      this.setState({renderText:timerObject.length})
+    }});
   }
   _ChangeBackgroundColor=() =>{
     //Get random index of colors array
@@ -103,22 +110,7 @@ export class Timer extends Component {
       <RenderReminder renderText={this.state.renderText} backgroundColor={this.state.backgroundGradient}
           DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor} fontLoaded={this.state.fontLoaded}
           showButton={this.state.showButton} killButton={this.state.killButton} AddTimer={this.AddTimer} checkOutButtonProgress={this.state.checkOutButtonProgress}/>
-        {/* {this.state.renderText != 0 ?
-          <RenderReminder renderText={this.state.renderText} backgroundColor={this.state.backgroundGradient}
-          DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor} fontLoaded={this.state.fontLoaded}
-          showButton={this.state.showButton} killButton={this.state.killButton} AddTimer={this.AddTimer} checkOutButtonProgress={this.state.checkOutButtonProgress}/> :
-          this.state.fontLoaded ?
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', margin: '10%', width: width * 0.8, borderRadius: 20, elevation: 20 }}>
-              {this.state.showButton && !this.state.killButton && <TouchableOpacity onPress={this.AddTimer}>
-                <FonTelloIcon size={100} name="plus-circled" color="#FF5050" />
-              </TouchableOpacity>}
-              {!this.state.showButton && <LottieView source={require("../assets/check_mark_success.json")} progress={this.state.checkOutButtonProgress} />}
-            </View> :
-            null} */}
-
       </View>
-
-
     </LinearGradient>
    </ImageBackground>
     );
@@ -129,28 +121,29 @@ class RenderReminder extends Component{
   
   constructor(props){
     super(props);
+
   }
   
   render(){
-    // <RenderReminder renderText={this.state.renderText} backgroundColor={this.state.backgroundGradient}
-    // DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor}/>
     if(this.props.renderText!= 0){
       return( 
       <MultiSelectList data={timerObject} backgroundColor={this.props.backgroundColor} 
         style={{ justifyContent: 'center', alignItems: 'center' }}
         DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this.props.ChangeBackgroundColor} /> 
       )
-    }else if(this.props.fontLoaded){
-      return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', margin: '10%', width: width * 0.8, borderRadius: 20, elevation: 20 }}>
-              {this.props.showButton && !this.props.killButton && <TouchableOpacity onPress={this.props.AddTimer}>
-                <FonTelloIcon size={100} name="plus-circled" color="#FF5050" />
-              </TouchableOpacity>}
-              {!this.props.showButton && <LottieView source={require("../assets/check_mark_success.json")} progress={this.props.checkOutButtonProgress} />}
-        </View> 
-      )
-    }else{
-      return  <ActivityIndicator size="large" color="#0000ff" />
+    
+  } 
+  else if(this.props.fontLoaded && this.props.renderText==0){
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', margin: '10%', width: width * 0.8, borderRadius: 20, elevation: 20 }}>
+            {this.props.showButton && !this.props.killButton && <TouchableOpacity onPress={this.props.AddTimer}>
+              <FonTelloIcon size={100} name="plus-circled" color="#FF5050" />
+            </TouchableOpacity>}
+            {!this.props.showButton && <LottieView source={require("../assets/check_mark_success.json")} progress={this.props.checkOutButtonProgress} />}
+      </View> 
+    )
+  }else{
+      return  <ActivityIndicator size="large" color="#fff" />
     } 
   }
 }
@@ -164,6 +157,7 @@ class MultiSelectList extends React.PureComponent {
     const start = timerObject.slice(0, index);
     const end = timerObject.slice(index + 1);
     timerObject.splice(index, 1);
+    console.log(timerObject)
     this.setState({ dataSource: start.concat(end) });
     let useruid = firebase.auth().currentUser.uid;
     firebase.database().ref("users/" + useruid + "/" + id).remove();
@@ -182,7 +176,6 @@ class MultiSelectList extends React.PureComponent {
     }
   };
   render() {
-    console.log(timerObject);
     return (<FlatList data={this.state.dataSource} keyExtractor={this._keyExtractor} 
       renderItem={this._renderItem} horizontal={true} vertical={false} 
       onViewableItemsChanged={this.onViewableItemsChanged} 

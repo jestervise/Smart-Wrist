@@ -8,7 +8,7 @@ import {Permissions,ImagePicker} from 'expo'
 import Icon from '@expo/vector-icons/Ionicons';
 
 //Variable to store the current humidity and temperature
-let tempHumid=[];
+export let tempHumid=["",""];
 
 
 export class MiddleCircle extends Component{

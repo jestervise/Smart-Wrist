@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { 
-  View, Text, StyleSheet,Alert,Animated,Linking
+  StyleSheet,Alert,Animated,Linking
 } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import styles from '../Styles'
@@ -19,6 +19,7 @@ import { Settings } from './Settings';
 import { Profile } from './Profile';
 import { Feed } from './Feed';
 import { Timer } from './Timer';
+import { Detail } from './Detail';
 export let timerObject=[];
 export const FonTelloIcon = createIconSetFromFontello(fontelloConfig, 'c');
 
@@ -109,12 +110,6 @@ class AnimatedGradient extends Component {
   }
 }
 
-const Detail = props => (<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-    <Text>Detail</Text>
-  </View>
-);
-
-
 //Navigation Options
 
 
@@ -163,7 +158,11 @@ const HomeStack = createStackNavigator(
       }
     },
     Detail: {
-      screen: Detail
+      screen: Detail,
+      navigationOptions:{
+        header:null
+      }
+      
     }
   },
   {
