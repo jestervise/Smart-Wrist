@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, TextInput, DatePickerAndroid, TimePickerAndroid, Platform, 
-    TouchableOpacity, FlatList, Animated, Easing,Dimensions,ImageBackground } from 'react-native';
+    TouchableOpacity, FlatList, Animated, Easing,Dimensions,ImageBackground,ActivityIndicator } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import LottieView from 'lottie-react-native';
 import { TimerCircle } from './SvgShapes';
@@ -72,7 +72,7 @@ export class Timer extends Component {
       "c": require('../assets/fonts/c.ttf')
     }).then(() => this.setState({ fontLoaded: true }));
   }
-  _ChangeBackgroundColor() {
+  _ChangeBackgroundColor=() =>{
     //Get random index of colors array
     let randomNum = this.getRandomInt(this.colors.length);
     //then choose the color which is not the same as previous 
@@ -100,9 +100,13 @@ export class Timer extends Component {
         </View>
       </View>
       <View style={{ flex: 0.8, justifyContent: 'flex-start', alignItems: 'center', flexDirection: 'column', height: '100%' }}>
-
-        {this.state.renderText != 0 ?
-          <MultiSelectList data={timerObject} backgroundColor={this.state.backgroundGradient} style={{ justifyContent: 'center', alignItems: 'center' }} DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor} /> :
+      <RenderReminder renderText={this.state.renderText} backgroundColor={this.state.backgroundGradient}
+          DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor} fontLoaded={this.state.fontLoaded}
+          showButton={this.state.showButton} killButton={this.state.killButton} AddTimer={this.AddTimer} checkOutButtonProgress={this.state.checkOutButtonProgress}/>
+        {/* {this.state.renderText != 0 ?
+          <RenderReminder renderText={this.state.renderText} backgroundColor={this.state.backgroundGradient}
+          DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor} fontLoaded={this.state.fontLoaded}
+          showButton={this.state.showButton} killButton={this.state.killButton} AddTimer={this.AddTimer} checkOutButtonProgress={this.state.checkOutButtonProgress}/> :
           this.state.fontLoaded ?
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', margin: '10%', width: width * 0.8, borderRadius: 20, elevation: 20 }}>
               {this.state.showButton && !this.state.killButton && <TouchableOpacity onPress={this.AddTimer}>
@@ -110,7 +114,7 @@ export class Timer extends Component {
               </TouchableOpacity>}
               {!this.state.showButton && <LottieView source={require("../assets/check_mark_success.json")} progress={this.state.checkOutButtonProgress} />}
             </View> :
-            null}
+            null} */}
 
       </View>
 
@@ -120,6 +124,37 @@ export class Timer extends Component {
     );
   }
 }
+
+class RenderReminder extends Component{
+  
+  constructor(props){
+    super(props);
+  }
+  
+  render(){
+    // <RenderReminder renderText={this.state.renderText} backgroundColor={this.state.backgroundGradient}
+    // DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this._ChangeBackgroundColor}/>
+    if(this.props.renderText!= 0){
+      return( 
+      <MultiSelectList data={timerObject} backgroundColor={this.props.backgroundColor} 
+        style={{ justifyContent: 'center', alignItems: 'center' }}
+        DeleteTimer={this.props.DeleteTimer} ChangeBackgroundColor={this.props.ChangeBackgroundColor} /> 
+      )
+    }else if(this.props.fontLoaded){
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white', margin: '10%', width: width * 0.8, borderRadius: 20, elevation: 20 }}>
+              {this.props.showButton && !this.props.killButton && <TouchableOpacity onPress={this.props.AddTimer}>
+                <FonTelloIcon size={100} name="plus-circled" color="#FF5050" />
+              </TouchableOpacity>}
+              {!this.props.showButton && <LottieView source={require("../assets/check_mark_success.json")} progress={this.props.checkOutButtonProgress} />}
+        </View> 
+      )
+    }else{
+      return  <ActivityIndicator size="large" color="#0000ff" />
+    } 
+  }
+}
+
 class MultiSelectList extends React.PureComponent {
   state = { selected: new Map(), dataSource: timerObject };
   _keyExtractor = (item, index) => item[0];
