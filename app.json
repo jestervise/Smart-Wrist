@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ReactApplicationTestt",
+    "name": "Smart Wrist",
     "slug": "newFolder",
     "privacy": "public",
     "sdkVersion": "32.0.0",
@@ -23,7 +23,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.taylorsedu.smartwrist"
+    },
+    "android":{
+      "package": "com.taylorsedu.smartwrist"
     }
   }
 }
