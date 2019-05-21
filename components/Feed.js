@@ -10,8 +10,9 @@ import Call from './Call';
 import Modal from 'react-native-modal';
 import { Permissions } from 'expo';
 import { writeUserData } from '../functions/writeUserData';
-import { createCalenderEvent } from '../functions/createCalenderEvent';
+import { createCalenderEvent } from '../functions/handleCalenderEvent';
 var { height, width } = Dimensions.get("window");
+import {signOutPopUp} from '../functions/SignOut'
 
 export class Feed extends Component {
   constructor(props) {
@@ -79,35 +80,11 @@ export class Feed extends Component {
         <Icon style={{ paddingLeft: 10, paddingTop: 20 }} onPress={() => this.props.navigation.openDrawer()} name="md-menu" size={30} color={this.state.iconColor} />
       </View>
       <View style={{ position: 'absolute', right: 10, top: 20, zIndex: 100, }}>
-
-        <Icon name="md-log-out" size={30} color={this.state.iconColor} style={{ paddingRight: 10, paddingTop: 20 }} onPress={() => {
-          Alert.alert("Sign Out", "Are you sure?", [
-            {
-              text: 'Yes', style: 'default', onPress: () => {
-                firebase.auth().signOut().then(() => {
-                  let user = firebase.auth.currentUser;
-                  if (user) {
-                    return "logged in";
-                  }
-                  else {
-                    return "logged out";
-                  }
-                }).then((logged) => {
-                  if (logged == "logged out") {
-                    console.log(logged);
-                    navigation.navigate('ProfileStack'); // Navigate ProfileStack
-                  }
-                }).catch((error) => console.log(error));
-              }
-            },
-            { text: 'No', style: 'cancel' },
-          ] //AlertButton
-          );
-        }} />
+        <Icon name="md-log-out" size={30} color={this.state.iconColor} style={{ paddingRight: 10, paddingTop: 20 }} onPress={()=>{signOutPopUp(this.props.screenProps.rootNavigation)}} />
       </View>
       <ScrollView keyboardShouldPersistTaps="never" onScroll={this.handleScroll}>
         <ImageBackground resizeMode='contain' style={{ flex: 1, flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: height * (64 / 100), marginBottom: '5%', marginTop: 0, paddingTop: 0, top: -20 }} source={require("../assets/dashboardBackground.png")}>
-
+        
           <MiddleCircle />
           <Call />
           <TouchableOpacity style={{ flex: 0.1, marginBottom: 20 }} onPress={() => this.props.navigation.navigate('Detail')}>
@@ -125,11 +102,14 @@ export class Feed extends Component {
 
         {this.state.isIOS && <Button title="Submit" onPress={() => { this.props.navigation.navigate('TimerStack', { year: year, month: month, day: day }); }} />}
 
-        <Button title="PlacehodlerButton" onPress={() => this.props.navigation.navigate('Detail')} />
+        <View style={{width:"100%",height:200,backgroundColor:"white"}}>
+          <StepsCounter />
+        </View>
       </ScrollView>
-      <StepsCounter />
+      
     </View>);
   }
+  
 }
 
 class DashBoardButton extends Component {

@@ -44,7 +44,7 @@ class Home extends Component {
     initializeFirebaseTimer();
   }
   render() {
-    return <AppContainer />;
+    return <AppContainer screenProps={{rootNavigation:this.props.navigation}}/>;
   }
 }
 export default Home;
@@ -279,13 +279,15 @@ const DashboardStackNavigator = createStackNavigator(
 const AppDrawerNavigator = createDrawerNavigator({
   Dashboard: {
     screen: DashboardStackNavigator
-  }
+  },
+  Settings:{screen:Settings}
   
 });
 
 const AppSwitchNavigator = createSwitchNavigator({
   
-  Dashboard: { screen: AppDrawerNavigator }
+  Dashboard: { screen: AppDrawerNavigator },
+ 
 });
 
 const AppContainer = createAppContainer(AppSwitchNavigator);

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, TextInput, DatePickerAndroid, TimePickerAndroid, Platform, 
-    TouchableOpacity, FlatList, Animated, Easing,Dimensions,ImageBackground,ActivityIndicator } from 'react-native';
+    TouchableOpacity, FlatList, Animated, Easing,Dimensions,ImageBackground,ActivityIndicator,AsyncStorage } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import LottieView from 'lottie-react-native';
 import { TimerCircle } from './SvgShapes';
@@ -9,7 +9,7 @@ import { LinearGradient, Font } from 'expo';
 import { Overlay, Button as RNButton } from 'react-native-elements';
 import { AddTimer } from '../functions/AddTimer';
 import { writeUserData } from '../functions/writeUserData';
-import { createCalenderEvent } from '../functions/createCalenderEvent';
+import { createCalenderEvent,deleteCalendarEvent } from '../functions/handleCalenderEvent';
 import { initializeFirebaseTimer } from './Home';
 import { timerObject, FonTelloIcon } from './Home';
 var { height, width } = Dimensions.get("window");
@@ -45,7 +45,7 @@ export class Timer extends Component {
         });
         if (action !== TimePickerAndroid.dismissedAction) {
           var uid = firebase.auth().currentUser.uid;
-          createCalenderEvent(year, month + 1, day, hour, minute);
+          let calendarId=await createCalenderEvent(year, month + 1, day, hour, minute);
           this.AddAlarmAnimation().then(()=>writeUserData(uid, day, month + 1, year, hour, minute)).
           then((done)=>{
             if(done="done")
@@ -161,6 +161,7 @@ class MultiSelectList extends React.PureComponent {
     this.setState({ dataSource: start.concat(end) });
     let useruid = firebase.auth().currentUser.uid;
     firebase.database().ref("users/" + useruid + "/" + id).remove();
+    deleteCalendarEvent();
   };
   _renderItem = ({ item, index }) => (<MyListItem id={item[0]} onPressItem={this._onPressItem} 
     selected={!!this.state.selected.get(item.id)} date={item[1].date} 
@@ -202,6 +203,7 @@ class MyListItem extends React.PureComponent {
     this.props.onPressItem(this.props.id, this.props.index);
   };
   render() {
+   
     return (<View style={{
       flex: 1, justifyContent: 'center', alignItems: 'center',
       flexDirection: 'column', backgroundColor: 'white', height: '70%', width: width * 0.8,

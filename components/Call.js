@@ -5,7 +5,8 @@ import {Contacts,Permissions} from 'expo'
 import {connect} from 'react-redux'
 import {toggleContactListOn} from '../redux/actions'
 import { Button,Text, } from 'react-native-elements';
-import ContactList,{caregiver} from './ContactList'
+import ContactList,{caregiver,setCaregiver} from './ContactList'
+import firebase from './firebaseconfig';
 
 
 let x=0;
@@ -17,12 +18,21 @@ class Call extends Component{
             isVisible:true
         }
         this.OpenContact=this.OpenContact.bind(this);
+        this.readCaregiver();
     }
 
+    async readCaregiver(){
+        let userId= firebase.auth().currentUser.uid;
+        firebase.database().ref("caregiverDetails/"+userId+"/phoneNumber").once('value').then(
+            (snapshot)=>{
+                setCaregiver(snapshot.val())
+            }
+        );
+    }
 
     async OpenContact(){
         if(caregiver){
-            Linking.openURL(`tel:${"0123456789"}`);
+            Linking.openURL(`tel:${caregiver}`);
         }
         else{
             //Ask for get contact permission 

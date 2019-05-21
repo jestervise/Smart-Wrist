@@ -1,7 +1,8 @@
 import Expo from "expo";
 import React from "react";
 import { Pedometer } from "expo";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import {Text} from 'react-native-elements'
 
 export default class PedometerSensor extends React.Component {
   state = {
@@ -59,15 +60,19 @@ export default class PedometerSensor extends React.Component {
   };
 
   render() {
+    let h3Style= {color:"red"}
     return (
       <View style={styles.container}>
         <Text>
-          Pedometer.isAvailableAsync(): {this.state.isPedometerAvailable}
+          Is pedometer available in this device? 
         </Text>
+        <Text h3 h3Style={h3Style}>{this.state.isPedometerAvailable?"Yes":"No"}</Text>
         <Text>
-          Steps taken in the last 24 hours: {this.state.pastStepCount}
+          Steps taken in the last 24 hours:
         </Text>
-        <Text>Walk! And watch this go up: {this.state.currentStepCount}</Text>
+        <Text h3 h3Style={h3Style}>{this.state.pastStepCount}</Text>
+        <Text>Walk! And watch this goes up </Text>
+        <Text h3 h3Style={h3Style}>{this.state.currentStepCount}</Text>
       </View>
     );
   }

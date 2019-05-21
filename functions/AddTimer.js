@@ -1,7 +1,7 @@
 import { DatePickerAndroid, TimePickerAndroid, Platform } from 'react-native';
 import firebase from '../components/firebaseconfig';
 import { Permissions } from 'expo';
-import { createCalenderEvent } from "./createCalenderEvent";
+import { createCalenderEvent } from "./handleCalenderEvent";
 import { writeUserData } from "./writeUserData";
 
 export async function AddTimer() {
@@ -29,3 +29,4 @@ export async function AddTimer() {
     }
   }
 }
+

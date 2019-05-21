@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Smart Wrist",
+    "name": "ReactNativeTestt",
     "slug": "newFolder",
     "privacy": "public",
     "sdkVersion": "32.0.0",
@@ -24,11 +24,16 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.taylorsedu.smartwrist"
+      "bundleIdentifier": "com.taylorsedu.ReactNativeTestt"
     },
     "android": {
-      "package": "com.taylorsedu.smartwrist"
-  
+      "package": "com.taylorsedu.ReactNativeTestt",
+      "publishBundlePath": "android\\app\\src\\main\\assets\\shell-app.bundle",
+      "publishManifestPath": "android\\app\\src\\main\\assets\\shell-app-manifest.json"
+    },
+    "isDetached": false,
+    "detach": {
+      "androidExpoViewUrl": "https://s3.amazonaws.com/exp-exponent-view-code/android-v2.10.8-sdk32.0.0-bca0f957-de78-44c8-91ed-f3151372d79d.tar.gz"
     }
   }
 }

@@ -7,8 +7,13 @@ import {Overlay} from 'react-native-elements'
 import * as Animatable from 'react-native-animatable'
 import store from '../redux/store'
 import Icon from '@expo/vector-icons/Ionicons';
+import firebase from './firebaseconfig'
 
 export let caregiver;
+
+export function setCaregiver(number){
+    caregiver=number;
+}
 
  class ContactList extends Component{
     contact=this.props.contact
@@ -115,6 +120,13 @@ class SetContact extends Component{
     parseContact=()=>{
         this.props.toggleContactListOff();
         caregiver=this.props.phoneNumbers;
+        this.sendContactToDatabase(this.props.phoneNumbers);
+    }
+
+    sendContactToDatabase(number){
+        let userId=firebase.auth().currentUser.uid;
+        let phoneNumber=firebase.database().ref("caregiverDetails/"+userId).child("phoneNumber");
+        phoneNumber.set(number);
     }
 
     render(){
