@@ -1,3 +1,5 @@
+![alt text](https://github.com/jestervise/Smart-Wrist/blob/New-Start/assets/splash.png)
+
 # Smart-Wrist
 App.js is the entry point of the software and those sub modules are stored in component folder while the redux state management action files
 are stored in the redux folder, functions folder has the most commonly used functions across the software. 
