@@ -8,6 +8,7 @@ import firebase from './firebaseconfig';
 import {createIconSetFromFontello} from '@expo/vector-icons';
 import fontelloConfig from '../assets/config.json';
 import { GradientHelper } from "./GradientHelper";
+import TabBar from './TabBarComponent'
 import {
   createSwitchNavigator,
   createAppContainer,
@@ -225,6 +226,7 @@ const DashboardTabNavigator = createBottomTabNavigator(
     
   },
   {
+    tabBarComponent:TabBar,
     navigationOptions: ({ navigation }) => {
       const { routeName } = navigation.state.routes[navigation.state.index];
       
@@ -236,7 +238,7 @@ const DashboardTabNavigator = createBottomTabNavigator(
       };
     },
     tabBarOptions: {
-      activeTintColor: 'tomato',
+      activeTintColor: '#fff',
       inactiveTintColor: '#E9C59C',
       showLabel :false,
       style:{
@@ -256,7 +258,7 @@ const DashboardTabNavigator = createBottomTabNavigator(
       else if(routeName=="Timer")
         iconName="md-alarm"       
       return {
-        tabBarIcon:({ focused, horizontal, tintColor })=>{return <Icon name={iconName} size ={32} color={tintColor}/>}
+        tabBarIcon:({ focused, horizontal, tintColor })=>{return <Icon name={iconName}  size ={32} color={tintColor}/>}
       };
     } 
   }

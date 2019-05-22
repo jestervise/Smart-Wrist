@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Image, ImageBackground,Text,TouchableOpacity,Alert,BackAndroid } from 'react-native';
+import { View, ScrollView, Image,Text,TouchableOpacity,BackAndroid,Switch,TouchableWithoutFeedback,Animated } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import {Overlay, Button,Input } from 'react-native-elements'
 import firebase from "./firebaseconfig"
 import {setCaregiver} from "./ContactList"
 import {signOutPopUp} from "../functions/SignOut"
+
 
 export class Settings extends Component {
  
@@ -12,7 +13,8 @@ export class Settings extends Component {
     super(props)
     this.state={
       isVisible:false,
-      value:""
+      value:"",
+      isToggle:true
     }
    this._TriggerChangeCaregiverNameOverlay= this._TriggerChangeCaregiverNameOverlay.bind(this)
     
@@ -38,8 +40,12 @@ export class Settings extends Component {
     
   }
 
+  ReceiveSms=()=>{
+    this.setState({isToggle:!this.state.isToggle})
+  }
+
   render() {
-    let text= ["Change Caregiver Contact Number","Sign Out", "Close App"," incididunt ut labore et",
+    let text= ["Change Caregiver Contact Number","Sign Out", "Receive SMS","Close App",
     "Duis aute irure dolor in reprehenderit"]
     let contact=(
     <Overlay isVisible={this.state.isVisible}>
@@ -67,7 +73,8 @@ export class Settings extends Component {
         <ScrollView>
          <SettingsObject text={text[0]} handleFunction={this._TriggerChangeCaregiverNameOverlay}/>
          <SettingsObject text={text[1]} handleFunction={()=>{signOutPopUp(this.props.screenProps.rootNavigation)}}/>
-         <SettingsObject text={text[2]} handleFunction={()=>BackAndroid.exitApp()}/>
+         <ToggleObject text={text[2]} handleFunction={this.ReceiveSms} isToggle={this.state.isToggle}/>
+         <SettingsObject text={text[3]} handleFunction={()=>BackAndroid.exitApp()}/>
         </ScrollView>
         {contact}
       </View>
@@ -91,4 +98,66 @@ const SettingsObject=(props)=> {
       </TouchableOpacity>
       
     </View>;
+}
+
+class ToggleObject  extends Component{
+
+  constructor(props){
+    super(props)
+    this.state={
+      moveCircle:new Animated.Value(35),
+      moveText:new Animated.Value(5),
+      circleColor:new Animated.Value(0)
+    }
+  }
+
+  changeName=()=>{
+    this.props.handleFunction();
+    if(this.props.isToggle==false){
+      this.toggleAnimation(35,this.state.moveCircle)
+      this.toggleAnimation(5,this.state.moveText)
+      this.toggleAnimation(0,this.state.circleColor)
+      
+    }else{
+      this.toggleAnimation(0,this.state.moveCircle)
+      this.toggleAnimation(32,this.state.moveText)
+      this.toggleAnimation(150,this.state.circleColor)
+      
+    }
+  }
+
+  toggleAnimation=(toVal,animatableValue)=>{
+    Animated.timing(animatableValue,
+      {
+        toValue:toVal,
+        duration:500
+      }).start()
+  }
+
+  
+
+  render(){
+    let interpolateColor=this.state.circleColor.interpolate({
+      inputRange:[0,150],
+      outputRange:["rgba(188,255,136,1)","rgba(200,100,88,1)"]
+    })
+    return <View style={{ backgroundColor: '#FF5858', marginLeft: 10, marginRight: 10,
+    marginBottom:2,height: 55, flexDirection: 'row',borderRadius:5,
+    elevation:3,justifyContent:'space-between',alignItems:'center' }}>
+      <Text style={{ color: '#fff',fontSize:12, paddingLeft: 20,opacity:0.8 }}>{this.props.text}</Text>
+  {/*Switch */}
+        <TouchableWithoutFeedback onPress={this.changeName}>
+          <View style={{backgroundColor:"transparent",width:65,height:30,alignItems: 'center',borderRadius:15,
+          borderColor:'#F8BE02',borderWidth:3,flexDirection:'row',justifyContent:"space-between",marginRight:10}}>
+            {/*Circle */}
+            <Animated.View  style={{backgroundColor:interpolateColor,width:27,height:27,borderRadius:30,elevation:10,
+            borderColor:"#fff",borderWidth:3,left:this.state.moveCircle}}/>
+            <Animated.Text style={{fontSize:13,color:"#fff",position:'absolute',
+            left:this.state.moveText}}>{this.props.isToggle?"ON":"OFF"}</Animated.Text>
+          </View>
+        </TouchableWithoutFeedback>
+    </View>;
+
+  }
+  
 }
