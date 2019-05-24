@@ -34,9 +34,14 @@ exports.textStatus = functions.database
                 .then(detectionStatus => {
                     const status      = detectionStatus.status
                     const phoneNumber = detectionStatus.phoneNumber
+                    const shouldReceiveSMS = detectionStatus.shouldReceiveSMS
 
                     if ( !validE164(phoneNumber) ) {
                         throw new Error('number must be E164 format!')
+                    }
+
+                    if(shouldReceiveSMS==="false"){
+                        throw new Error('the user expected no SMS!')
                     }
 
                     const textMessage = {

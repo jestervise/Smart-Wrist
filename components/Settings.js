@@ -3,7 +3,8 @@ import { View, ScrollView, Image,Text,TouchableOpacity,BackAndroid,Switch,Toucha
 import Icon from '@expo/vector-icons/Ionicons';
 import {Overlay, Button,Input } from 'react-native-elements'
 import firebase from "./firebaseconfig"
-import {setCaregiver} from "./ContactList"
+import {AppLoading} from 'expo'
+import {setCaregiver, caregiver} from "./ContactList"
 import {signOutPopUp} from "../functions/SignOut"
 
 
@@ -14,7 +15,8 @@ export class Settings extends Component {
     this.state={
       isVisible:false,
       value:"",
-      isToggle:true
+      isToggle:true,
+      isLoading:true
     }
    this._TriggerChangeCaregiverNameOverlay= this._TriggerChangeCaregiverNameOverlay.bind(this)
     
@@ -24,15 +26,31 @@ export class Settings extends Component {
     console.log("change caregiver number")
     this.setState({isVisible:true})
   }
+  
+  componentDidMount(){
+    let userId= firebase.auth().currentUser.uid;
+    let shouldReceiveSMS=firebase.database().ref("caregiverDetails/"+userId).child("shouldReceiveSMS")
+    shouldReceiveSMS.once("value",(snapshot)=>{
+      this.setState({isToggle:snapshot.val(),
+      isLoading:false});
+      console.log(this.state.isToggle)
+    })
+  }
 
   ChangeCaregiverNum=()=>{
-    if(this.state.value.length<=10){
+    let regex =/^\+?[1-9]\d{1,14}$/
+    let isString = /[0-9]+/
+    if(regex.test(this.state.value) || isString.test(this.state.value)==false){
       this.setState({value:"Invalid format"})
       setTimeout(()=>{this.setState({value:""})},1500)
     }else{
       let userId= firebase.auth().currentUser.uid;
       let phoneNumber=firebase.database().ref("caregiverDetails/"+userId).child("phoneNumber")
-      phoneNumber.set(this.state.value);
+      if(this.state.value.charAt(0)!="+"){
+        phoneNumber.set("+"+this.state.value);
+      }else{
+        phoneNumber.set(this.state.value);
+      }
       this.setState({isVisible:false});
       this.setState({value:""})
       setCaregiver(this.state.value)
@@ -42,21 +60,45 @@ export class Settings extends Component {
 
   ReceiveSms=()=>{
     this.setState({isToggle:!this.state.isToggle})
+    this.ToggleSendingFunction()
+  }
+
+  ToggleSendingFunction(){
+    let userId = firebase.auth().currentUser.uid;
+    if(this.state.isToggle==false){
+      firebase.database().ref("caregiverDetails/"+userId+"/shouldReceiveSMS").set("true");
+    }else{
+      firebase.database().ref("caregiverDetails/"+userId+"/shouldReceiveSMS").set("false");
+    }
   }
 
   render() {
+    let buttonStyle={marginBottom:20}
     let text= ["Change Caregiver Contact Number","Sign Out", "Receive SMS","Close App",
     "Duis aute irure dolor in reprehenderit"]
     let contact=(
     <Overlay isVisible={this.state.isVisible}>
-    <View>
-      <Input  placeholder='INPUT WITH ICON'
-  leftIcon={{ type: 'font-awesome', name: 'heart',color:"red", }}
+    <View style={{flex:1,justifyContent:'space-around'}}>
+       {/*Input with label */}
+      <Input  style={{flex:0.6}} placeholder='Phone number w country code'
+  leftIcon={{ type: 'font-awesome', name: 'pencil',color:"tomato", }}
   value={this.state.value} onChangeText={(value)=>{this.setState({value:value})}}
-  dataDetectorTypes="phoneNumber" keyboardType="phone-pad" maxLength={20}
+  dataDetectorTypes="phoneNumber" keyboardType="phone-pad" maxLength={20} label="Enter phone number with country code" labelStyle={
+    {color:'tomato',fontSize:20,textAlign:'center'}} inputStyle={{color:'tomato',paddingLeft:10,fontSize:14}}
     />
-      <Button title="Submit" onPress={this.ChangeCaregiverNum}/>
-      <Button title="Close" onPress={()=>{this.setState({isVisible:false})}}/>
+    {/*Buttons */}
+    <View style={{flex:0.4,justifyContent:"space-between"}}>
+      <Button title="Submit" style={buttonStyle} onPress={this.ChangeCaregiverNum}/>
+      <Button title="Clear number" style={buttonStyle} onPress={()=>{
+        setCaregiver(null)
+        let userId = firebase.auth().currentUser.uid;
+        firebase.database().ref('caregiverDetails/'+userId+"/phoneNumber").remove();
+        this.setState({isVisible:false})
+        }}/>
+      <Button title="Close" style={buttonStyle} onPress={()=>{this.setState({isVisible:false})}}/>
+    </View>
+    
+     
     </View>
      
     </Overlay>)
@@ -68,12 +110,12 @@ export class Settings extends Component {
         <View style={{backgroundColor:'white',width:'95%',margin:10,height:'0.4%',opacity:0.7}}></View>
         <View style={{ marginLeft: 20, marginBottom: 10,marginTop:20,flexDirection:'row' }}>
           <Image source={require("../assets/bubble.png")}  />
-          <Text style={{position:'absolute',marginLeft:4,fontSize:10}}>General</Text>
+          <Text style={{position:'absolute',marginLeft:10,marginTop:2,fontSize:10}}>General</Text>
         </View>
         <ScrollView>
          <SettingsObject text={text[0]} handleFunction={this._TriggerChangeCaregiverNameOverlay}/>
          <SettingsObject text={text[1]} handleFunction={()=>{signOutPopUp(this.props.screenProps.rootNavigation)}}/>
-         <ToggleObject text={text[2]} handleFunction={this.ReceiveSms} isToggle={this.state.isToggle}/>
+         <ToggleObject text={text[2]} handleFunction={this.ReceiveSms} isToggle={this.state.isToggle} isLoading={this.state.isLoading}/>
          <SettingsObject text={text[3]} handleFunction={()=>BackAndroid.exitApp()}/>
         </ScrollView>
         {contact}
@@ -134,8 +176,6 @@ class ToggleObject  extends Component{
       }).start()
   }
 
-  
-
   render(){
     let interpolateColor=this.state.circleColor.interpolate({
       inputRange:[0,150],
@@ -146,6 +186,7 @@ class ToggleObject  extends Component{
     elevation:3,justifyContent:'space-between',alignItems:'center' }}>
       <Text style={{ color: '#fff',fontSize:12, paddingLeft: 20,opacity:0.8 }}>{this.props.text}</Text>
   {/*Switch */}
+        {this.props.isLoading==true?<AppLoading/>:
         <TouchableWithoutFeedback onPress={this.changeName}>
           <View style={{backgroundColor:"transparent",width:65,height:30,alignItems: 'center',borderRadius:15,
           borderColor:'#F8BE02',borderWidth:3,flexDirection:'row',justifyContent:"space-between",marginRight:10}}>
@@ -156,6 +197,7 @@ class ToggleObject  extends Component{
             left:this.state.moveText}}>{this.props.isToggle?"ON":"OFF"}</Animated.Text>
           </View>
         </TouchableWithoutFeedback>
+        }
     </View>;
 
   }

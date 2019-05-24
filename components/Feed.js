@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { View, Text, Button, DatePickerAndroid, TimePickerAndroid, DatePickerIOS, Platform, 
-    ScrollView, TouchableOpacity, Image, ImageBackground, Alert,Dimensions } from 'react-native';
+    ScrollView, TouchableOpacity, Image, ImageBackground, Alert,Dimensions,Animated } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import styles from '../Styles';
 import { MiddleCircle } from './SvgShapes';
@@ -22,7 +22,7 @@ export class Feed extends Component {
       isIOS: false,
       chosenDate: new Date(),
       location: null,
-      iconColor: "#fff"
+      iconColor: new Animated.Value(0)
     };
     this.getLocationAsync = this.getLocationAsync.bind(this);
   }
@@ -66,21 +66,41 @@ export class Feed extends Component {
 
   //If user were to scroll to certain point, change the icon color to black
   handleScroll = (event) => {
+    let duration =200
     if (event.nativeEvent.contentOffset.y > 240)
-      this.setState({ iconColor: '#000' });
-    else if (event.nativeEvent.contentOffset.y < 10) {
-      this.setState({ iconColor: '#fff' });
-    }
-    else
-      this.setState({ iconColor: '#fff' });
+      Animated.timing(this.state.iconColor,{
+        toValue:150,
+        duration:duration
+
+      }).start();
+
+    else if (event.nativeEvent.contentOffset.y < 10) 
+      Animated.timing(this.state.iconColor,{
+        toValue:0,
+        duration:duration
+      }).start(); 
+    else if(this.state.iconColor!=new Animated.Value(0) && event.nativeEvent.contentOffset.y<235)
+      Animated.timing(this.state.iconColor,{
+        toValue:0,
+        duration:duration
+      }).start();
+    else 
+      return;
   };
   render() {
+    let buttonColor = this.state.iconColor.interpolate({
+      inputRange:[0,150],
+      outputRange:["rgba(255,255,255,1)","rgba(0,0,0,1)"]
+    })
+
+    const AnimatedIcon = Animated.createAnimatedComponent(Icon);
+
     return (<View style={{ flex: 1, backgroundColor: '#EFEBE6' }}>
       <View style={{ position: 'absolute', left: 10, top: 20, zIndex: 100, }}>
-        <Icon style={{ paddingLeft: 10, paddingTop: 20 }} onPress={() => this.props.navigation.openDrawer()} name="md-menu" size={30} color={this.state.iconColor} />
+        <AnimatedIcon style={{ paddingLeft: 10, paddingTop: 20 ,color:buttonColor}} onPress={() => this.props.navigation.openDrawer()} name="md-menu" size={30}  />
       </View>
       <View style={{ position: 'absolute', right: 10, top: 20, zIndex: 100, }}>
-        <Icon name="md-log-out" size={30} color={this.state.iconColor} style={{ paddingRight: 10, paddingTop: 20 }} onPress={()=>{signOutPopUp(this.props.screenProps.rootNavigation)}} />
+        <AnimatedIcon name="md-log-out" size={30}  style={{ paddingRight: 10, paddingTop: 20 ,color:buttonColor}} onPress={()=>{signOutPopUp(this.props.screenProps.rootNavigation)}} />
       </View>
       <ScrollView keyboardShouldPersistTaps="never" onScroll={this.handleScroll}>
         <ImageBackground resizeMode='contain' style={{ flex: 1, flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: height * (64 / 100), marginBottom: '5%', marginTop: 0, paddingTop: 0, top: -20 }} source={require("../assets/dashboardBackground.png")}>
