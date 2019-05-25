@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, TextInput, Platform, TouchableOpacity, ImageBackground, Alert ,Dimensions,ScrollView} from 'react-native';
+import { View, Text, TextInput, Platform, TouchableOpacity, ImageBackground, Alert ,Dimensions,ScrollView,Animated} from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons';
 import { ProfileCircle } from './SvgShapes';
 import firebase from './firebaseconfig';
@@ -9,7 +9,11 @@ import { Overlay, Button as RNButton } from 'react-native-elements';
 
 var { height, width } = Dimensions.get("window");
 
+const IMAGE_HEIGHT=height*0.4;
+
 export class Profile extends Component {
+  scrollAnimatedValue= new Animated.Value(0);
+  
   headerImage = function () {
     return firebase.storage().ref().child("images/profileImage" + firebase.auth().currentUser.uid);
   };
@@ -139,13 +143,14 @@ export class Profile extends Component {
   render() {
     let location = "Loading";
     let image = this.state.image;
-    const themeColor = '#EFEBE6'
+    const themeColor = '#ECEBF3'
+    let AnimatedImageBackground= Animated.createAnimatedComponent(ImageBackground);
     //Format the location data to state and country
     if (this.state.location) {
       location = this.state.location[0].region + "," + this.state.location[0].country;
     }
-    return (<ScrollView style={{ flex: 1,backgroundColor:themeColor }}>
-    <LinearGradient colors={["#fff","#FA9014"]}>
+    return (<View style={{ flex: 1,backgroundColor:themeColor }}>
+    <LinearGradient colors={[themeColor,themeColor]}>
 
       {/* Top Left Overlay */}
       <Overlay onBackdropPress={() => { this.setState({ isVisible: false }); }} isVisible={this.state.isVisible} style={{ flex: 1, justifyContent: 'space-between' }}>
@@ -168,15 +173,37 @@ export class Profile extends Component {
             </TouchableOpacity>
 
       </Overlay>
-
-      <ImageBackground source={this.state.image} style={{ width: '100%',height: height * 0.4 ,backgroundColor:'red'}}>
+      {/* The top banner picture */}
+      <AnimatedImageBackground source={this.state.image} style={{ width: '100%',height: IMAGE_HEIGHT ,
+      backgroundColor:'red',position:'absolute',top:0,zIndex:1000,
+      transform: [
+        {translateY: this.scrollAnimatedValue.interpolate({
+          inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
+          outputRange: [IMAGE_HEIGHT / 2, 0, -IMAGE_HEIGHT/1.5],
+          extrapolateRight: 'clamp',
+        })},
+        {scale: this.scrollAnimatedValue.interpolate({
+          inputRange: [-IMAGE_HEIGHT, 0],
+          outputRange: [2, 1],
+          extrapolateRight: 'clamp',
+        })},
+      ],
+      
+      }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 20 }}>
           <CalenderComponent OpenCalender={this.OpenCalender.bind(this)} />
           <EditBanner ChoosePhoto={this.ChoosePhoto.bind(this)} />
         </View>
         <ProfileCircle />
-      </ImageBackground>
-      <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+      </AnimatedImageBackground>
+      {/*bottom reports */}
+      <Animated.ScrollView  contentContainerStyle={{marginTop:IMAGE_HEIGHT}} onScroll={Animated.event(
+    [{ nativeEvent: { contentOffset: { y: this.scrollAnimatedValue }} }],
+    {useNativeDriver:true}
+  )}
+  scrollEventThrottle={8} // target 120fps
+  >
+      <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',}}>
         {/* Left indentation*/}
         <View style={{flex:0.3,backgroundColor:'blue'}}/>
         {/* The input name */}
@@ -186,8 +213,8 @@ export class Profile extends Component {
             <EditUserName ChangeDisplayName={this.ChangeDisplayName.bind(this)} />
           </View>
           <View style={{ flexDirection: 'row', paddingTop: 5, }}>
-            <Icon name="md-pin" size={12} color="#FF5353" />
-            <Text style={{ paddingLeft: 10, color: '#FF5353', fontSize: 12, textAlign: 'left' }}>{location}</Text>
+            <Icon name="md-pin" size={12} color="#6D7275" />
+            <Text style={{ paddingLeft: 10, color: '#6D7275', fontSize: 12, textAlign: 'left' ,fontWeight:'bold'}}>{location}</Text>
           </View>
         </View>
         {/* Right Button */}
@@ -201,17 +228,26 @@ shadowRadius: 1.00,
 
 elevation: 1,padding:20,paddingVertical:10,marginRight:20,borderRadius:10}} style={{flex:0.2,backgroundColor:'yellow',marginRight:10}}/>
       </View>
-      <ReportFeed text="The hardest choices require the strongest wills"/>
-      <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face."/>
-      <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you."/>
-      <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
+      
+        <ReportFeed text="The hardest choices require the strongest wills"/>
+        <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face."/>
+        <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you."/>
+        <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
+        {/* extended ver */}
+        <ReportFeed text="The hardest choices require the strongest wills"/>
+        <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face."/>
+        <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you."/>
+        <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
+      </Animated.ScrollView>
     </LinearGradient>
-    </ScrollView>);
+    </View>);
   }
 }
 
+
+
 const ReportFeed =(props)=>{
-  const themeColor='#EFEBE6'
+  const themeColor='#6D7275'
   const style={padding:20,backgroundColor:'#FF6A6A',width:'80%',height:'auto',
   borderRadius: 10,alignItems: 'center',shadowColor: "#000",
   shadowOffset: {
