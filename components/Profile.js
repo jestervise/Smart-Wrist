@@ -20,21 +20,16 @@ export class Profile extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      location: null,
-      displayName: firebase.auth().currentUser.displayName == undefined ?
-        firebase.auth().currentUser.email : firebase.auth().currentUser.displayName,
-      editable: false,
       image: require("../assets/placeholderProfilePic.png"),
       isVisible: false,
       showPhotoSelection: false
     };
-    this.textInput = React.createRef();
+   
     this.ChooseFromGalleryAsync = this.ChooseFromGalleryAsync.bind(this);
     this.TakePhotoAsync = this.TakePhotoAsync.bind(this);
   }
   componentWillMount() {
     this.initializeHeaderImage();
-    this.getLocationAsync();
   }
   async initializeHeaderImage() {
     //when component mount, download image from firebase storage and set it profile header
@@ -43,56 +38,15 @@ export class Profile extends Component {
     if (url)
       this.setState({ image: { uri: url } });
   }
-  async getLocationAsync() {
-    //If location services is enabled
-    let enabled = await Location.hasServicesEnabledAsync();
-    if (enabled) {
-      //get current location 
-      let location = await Location.getCurrentPositionAsync({});
-      let locationAddress = await Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude });
-      this.setState({ location: locationAddress });
-    }
-    else {
-      //If no location enabled, navigate user location settings to enable
-      Alert.alert("Reminder", "Please Turn On The Location Services", [{
-        text: 'OK', onPress: async () => {
-          let x = await IntentLauncher.startActivityAsync(IntentLauncher.ACTION_LOCATION_SOURCE_SETTINGS);
-          //If done, observe user location, and when location changed,reset user location
-          if (x)
-            Location.watchPositionAsync({}, async (location) => {
-              console.log(location);
-              let locationAddress = await Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude });
-              this.setState({ location: locationAddress });
-            });
-        }
-      },
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      }]);
-    }
-  }
-  //When change display name button is clicked,make the username editable and focus username
-  ChangeDisplayName() {
-    this.setState({ editable: true });
-    this.textInput.current.focus();
-  }
-  //if submit on click,make it ineditable and update the specific user's display name
-  SaveDisplayName() {
-    this.setState({ editable: false });
-    firebase.auth().currentUser.updateProfile({
-      displayName: this.state.displayName
-    }).then(() => console.log(firebase.auth().currentUser.displayName));
-  }
+  
   //when open calendar's button on click, turn the overlay popup visibility on and show calendar
-  OpenCalender() {
+  OpenCalender=()=> {
     console.log("Open Calender method");
     this.setState({ isVisible: true });
   }
   //when profile header button on click, turn the overlay popup visibility on and show "take photo",
   //"choose from gallery" options
-  ChoosePhoto() {
+  ChoosePhoto=()=>{
     this.setState({ showPhotoSelection: true });
   }
   //If "take photo option is selected"
@@ -141,94 +95,82 @@ export class Profile extends Component {
     blob.close();
   }
   render() {
-    let location = "Loading";
     let image = this.state.image;
     const themeColor = '#ECEBF3'
     let AnimatedImageBackground= Animated.createAnimatedComponent(ImageBackground);
-    //Format the location data to state and country
-    if (this.state.location) {
-      location = this.state.location[0].region + "," + this.state.location[0].country;
-    }
-    return (<View style={{ flex: 1,backgroundColor:themeColor }}>
-    <LinearGradient colors={[themeColor,themeColor]}>
+    //Top Left Overlay 
+    let TopRightOverlay=()=><Overlay onBackdropPress={() => { this.setState({ isVisible: false }); }} isVisible={this.state.isVisible} style={{ flex: 1, justifyContent: 'space-between' }}>
+      <View>
+          <Text style={{ fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}>Calender</Text>
 
-      {/* Top Left Overlay */}
-      <Overlay onBackdropPress={() => { this.setState({ isVisible: false }); }} isVisible={this.state.isVisible} style={{ flex: 1, justifyContent: 'space-between' }}>
-        <View>
-            <Text style={{ fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}>Calender</Text>
-
-            <RNCalendar />
-            <RNButton title="CLOSE" onPress={() => this.setState({ isVisible: false })} />
-        </View>
-      </Overlay>
-      {/* Top Right Overlay */}
-      <Overlay onBackdropPress={() => { this.setState({ showPhotoSelection: false }); }} isVisible={this.state.showPhotoSelection} height="20%" style={{ flex: 1, justifyContent: 'space-around', alignItems: 'center', }}>
-       
-            <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={this.TakePhotoAsync}>
-                <Text style={{ fontSize: 17 }}>Take a Photo</Text>
-
-            </TouchableOpacity>
-            <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={this.ChooseFromGalleryAsync}>
-                <Text style={{ fontSize: 17 }}>Choose From Gallery</Text>
-            </TouchableOpacity>
-
-      </Overlay>
-      {/* The top banner picture */}
-      <AnimatedImageBackground source={this.state.image} style={{ width: '100%',height: IMAGE_HEIGHT ,
-      backgroundColor:'red',position:'absolute',top:0,zIndex:1000,
-      transform: [
-        {translateY: this.scrollAnimatedValue.interpolate({
-          inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
-          outputRange: [IMAGE_HEIGHT / 2, 0, -IMAGE_HEIGHT/1.5],
-          extrapolateRight: 'clamp',
-        })},
-        {scale: this.scrollAnimatedValue.interpolate({
-          inputRange: [-IMAGE_HEIGHT, 0],
-          outputRange: [2, 1],
-          extrapolateRight: 'clamp',
-        })},
-      ],
-      
-      }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 20 }}>
-          <CalenderComponent OpenCalender={this.OpenCalender.bind(this)} />
-          <EditBanner ChoosePhoto={this.ChoosePhoto.bind(this)} />
-        </View>
-        <ProfileCircle />
-      </AnimatedImageBackground>
-      {/*bottom reports */}
-      <Animated.ScrollView  contentContainerStyle={{marginTop:IMAGE_HEIGHT}} onScroll={Animated.event(
-    [{ nativeEvent: { contentOffset: { y: this.scrollAnimatedValue }} }],
-    {useNativeDriver:true}
-  )}
-  scrollEventThrottle={8} // target 120fps
-  >
-      <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',}}>
-        {/* Left indentation*/}
-        <View style={{flex:0.3,backgroundColor:'blue'}}/>
-        {/* The input name */}
-        <View style={{ flex:0.5,alignSelf:'flex-end', marginVertical:20,marginTop:20, }}>
-          <View style={{ flexDirection: 'row' }}>
-            <TextInput ref={this.textInput} value={this.state.displayName} editable={this.state.editable} onSubmitEditing={this.SaveDisplayName.bind(this)} onChangeText={(text) => this.setState({ displayName: text })} style={{ color: "#F68909", fontSize: 15, textAlign: "left", fontWeight: 'bold' }} />
-            <EditUserName ChangeDisplayName={this.ChangeDisplayName.bind(this)} />
-          </View>
-          <View style={{ flexDirection: 'row', paddingTop: 5, }}>
-            <Icon name="md-pin" size={12} color="#6D7275" />
-            <Text style={{ paddingLeft: 10, color: '#6D7275', fontSize: 12, textAlign: 'left' ,fontWeight:'bold'}}>{location}</Text>
-          </View>
-        </View>
-        {/* Right Button */}
-        <RNButton title="Thanos" titleStyle={{color:'#FF6A6A'}} buttonStyle={{backgroundColor:'transparent',shadowColor: "#919191",
-shadowOffset: {
-	width: 0,
-	height: 1,
-},
-shadowOpacity: 0.18,
-shadowRadius: 1.00,
-
-elevation: 1,padding:20,paddingVertical:10,marginRight:20,borderRadius:10}} style={{flex:0.2,backgroundColor:'yellow',marginRight:10}}/>
+          <RNCalendar />
+          <RNButton title="CLOSE" onPress={() => this.setState({ isVisible: false })} />
       </View>
+    </Overlay>
+    //Top Right Overlay 
+    let TopLeftOverlay=()=> <Overlay onBackdropPress={() => { this.setState({ showPhotoSelection: false }); }} isVisible={this.state.showPhotoSelection} height="20%" style={{ flex: 1, justifyContent: 'space-around', alignItems: 'center', }}>
+     
+          <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={this.TakePhotoAsync}>
+              <Text style={{ fontSize: 17 }}>Take a Photo</Text>
+
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flex: 1, alignItems: 'center' }} onPress={this.ChooseFromGalleryAsync}>
+              <Text style={{ fontSize: 17 }}>Choose From Gallery</Text>
+          </TouchableOpacity>
+
+    </Overlay>
+    /*,transform: [
+    {translateY: this.scrollAnimatedValue.interpolate({
+      inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
+      outputRange: [IMAGE_HEIGHT / 2, 0, -IMAGE_HEIGHT / 2],
+      extrapolateRight: 'clamp',
+    })},
+    {scaleX: this.scrollAnimatedValue.interpolate({
+      inputRange: [-IMAGE_HEIGHT, 0],
+      outputRange: [2, 1],
+      extrapolateRight: 'clamp',
+    })},
+    {scaleY: this.scrollAnimatedValue.interpolate({
+      inputRange: [-IMAGE_HEIGHT, 0],
+      outputRange: [2, 1],
+      extrapolateRight: 'clamp',
+    })},
+  ] */
+  return (
+  <View style={{ flex: 1,backgroundColor:themeColor }}>
+      <TopLeftOverlay/>
+      <TopRightOverlay/>
       
+      {/* The top banner picture */}
+      
+        <AnimatedImageBackground source={this.state.image} style={{ width: '100%',height: IMAGE_HEIGHT ,
+        backgroundColor:'red',position:'absolute',top:0,zIndex:2000,
+        transform: [
+          {translateY: this.scrollAnimatedValue.interpolate({
+            inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
+            outputRange: [IMAGE_HEIGHT / 2, 0, -IMAGE_HEIGHT / 1.5],
+            extrapolateRight: 'clamp',
+          })},
+          {scale: this.scrollAnimatedValue.interpolate({
+            inputRange: [-IMAGE_HEIGHT, 0],
+            outputRange: [2, 1],
+            extrapolateRight: 'clamp',
+          })},
+        ],
+        }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 20 }}>
+            <CalenderComponent OpenCalender={this.OpenCalender} />
+            <EditBanner ChoosePhoto={this.ChoosePhoto} />
+          </View>
+          <ProfileCircle />
+        </AnimatedImageBackground>
+        <UserStatus scrollAnimatedValue={this.scrollAnimatedValue}/>
+    <Animated.ScrollView contentContainerStyle={{marginTop:IMAGE_HEIGHT*1.45}} onScroll={Animated.event(
+      [{ nativeEvent: { contentOffset: { y: this.scrollAnimatedValue }} }],
+      {useNativeDriver:true}
+      )}
+      // target 120fps
+      scrollEventThrottle={8} > 
         <ReportFeed text="The hardest choices require the strongest wills"/>
         <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face."/>
         <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you."/>
@@ -238,12 +180,126 @@ elevation: 1,padding:20,paddingVertical:10,marginRight:20,borderRadius:10}} styl
         <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face."/>
         <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you."/>
         <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
-      </Animated.ScrollView>
-    </LinearGradient>
-    </View>);
+    </Animated.ScrollView>
+  </View>);
   }
 }
 
+
+class UserStatus extends Component{
+  constructor(props){
+    super(props)
+    this.state={
+      displayName: firebase.auth().currentUser.displayName == undefined ?
+      firebase.auth().currentUser.email : firebase.auth().currentUser.displayName,
+      editable: false,
+      location: null,
+    }
+
+    this.textInput = React.createRef();
+  }
+
+//When change display name button is clicked,make the username editable and focus username
+ChangeDisplayName=()=> {
+  this.setState({ editable: true });
+  this.textInput.current.focus();
+}
+//if submit on click,make it ineditable and update the specific user's display name
+SaveDisplayName=()=> {
+  this.setState({ editable: false });
+  firebase.auth().currentUser.updateProfile({
+    displayName: this.state.displayName
+  }).then(() => console.log(firebase.auth().currentUser.displayName));
+}
+
+async getLocationAsync() {
+  //If location services is enabled
+  let enabled = await Location.hasServicesEnabledAsync();
+  if (enabled) {
+    //get current location 
+    let location = await Location.getCurrentPositionAsync({});
+    let locationAddress = await Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+    this.setState({ location: locationAddress });
+  }
+  else {
+    //If no location enabled, navigate user location settings to enable
+    Alert.alert("Reminder", "Please Turn On The Location Services", [{
+      text: 'OK', onPress: async () => {
+        let x = await IntentLauncher.startActivityAsync(IntentLauncher.ACTION_LOCATION_SOURCE_SETTINGS);
+        //If done, observe user location, and when location changed,reset user location
+        if (x)
+          Location.watchPositionAsync({}, async (location) => {
+            console.log(location);
+            let locationAddress = await Location.reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+            this.setState({ location: locationAddress });
+          });
+      }
+    },
+    {
+      text: 'Cancel',
+      onPress: () => console.log('Cancel Pressed'),
+      style: 'cancel',
+    }]);
+  }
+}
+
+componentWillMount(){
+  this.getLocationAsync();
+}
+
+   //bottom status 
+   render(){
+    let location = "Loading";
+
+     //Format the location data to state and country
+     if (this.state.location) {
+      location = this.state.location[0].region + "," + this.state.location[0].country;
+    }
+
+    return( 
+      <Animated.View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:'#ECEBF3',
+      marginTop:height*0.4,position:'absolute',zIndex:1000,transform: [
+        {translateY: this.props.scrollAnimatedValue.interpolate({
+          inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
+          outputRange: [IMAGE_HEIGHT / 2, 0, -IMAGE_HEIGHT / 1.5],
+          extrapolateRight: 'clamp',
+        })},
+        {scale: this.props.scrollAnimatedValue.interpolate({
+          inputRange: [-IMAGE_HEIGHT, 0],
+          outputRange: [2, 1],
+          extrapolateRight: 'clamp',
+        })},
+      ],}}>
+        {/* Left indentation*/}
+        <View style={{flex:0.4,backgroundColor:'blue'}}/>
+        {/* The input name */}
+        <View style={{ flex:0.5,alignSelf:'flex-end', marginVertical:20,marginTop:20, }}>
+          <View style={{ flexDirection: 'row' }}>
+            <TextInput ref={this.textInput} value={this.state.displayName} editable={this.state.editable} 
+            onSubmitEditing={this.SaveDisplayName} onChangeText={(text) => this.setState({ displayName: text })} style={{ color: "#F68909", fontSize: 15, textAlign: "left", fontWeight: 'bold' }} />
+            <EditUserName ChangeDisplayName={this.ChangeDisplayName} />
+          </View>
+          <View style={{ flexDirection: 'row', paddingTop: 5, }}>
+            <Icon name="md-pin" size={12} color="#6D7275" />
+            <Text style={{ paddingLeft: 10, color: '#6D7275', fontSize: 12, textAlign: 'left' ,fontWeight:'bold'}}>{location}</Text>
+          </View>
+        </View>
+        {/* Right Button */}
+        <RNButton title="Thanos" titleStyle={{color:'#FF6A6A'}} buttonStyle={{backgroundColor:'transparent',shadowColor: "#919191",
+        shadowOffset: {
+        width: 0,
+        height: 1,
+        },
+        shadowOpacity: 0.18,
+        shadowRadius: 1.00,
+  
+        elevation: 1,padding:20,paddingVertical:10,marginRight:20,borderRadius:10}} style={{flex:0.2,backgroundColor:'yellow',marginRight:10}}/>
+      </Animated.View>
+    )
+
+   }
+ 
+}
 
 
 const ReportFeed =(props)=>{
@@ -271,10 +327,10 @@ const ReportFeed =(props)=>{
 
 //Profile's Function Component/Icons in Profile page
 const EditBanner=(props)=>{return <TouchableOpacity onPress={props.ChoosePhoto}>
-<Icon name="md-create" size={23} color="#FFAEAE" style={{paddingRight:20,paddingTop:20}}/>
+<Icon name="md-create" size={23} color="#FFAEAE" style={{paddingRight:20,paddingTop:20,zIndex:1500}}/>
 </TouchableOpacity>}
 const CalenderComponent =(props)=> {return <TouchableOpacity onPress={props.OpenCalender}>
-<Icon name="md-calendar" size={25} color="#FFAEAE" style={{paddingLeft:20,paddingTop:20}}/>
+<Icon name="md-calendar" size={25} color="#FFAEAE" style={{paddingLeft:20,paddingTop:20,zIndex:1500}}/>
 </TouchableOpacity>}
 
 const EditUserName=(props)=>{
