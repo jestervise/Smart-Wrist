@@ -19,6 +19,18 @@ const client = new twilio(accountSid, authToken);
 
 const twilioNumber = '+16122610175' // your twilio phone number
 
+//Setup the credentials for accessing TwiML XML
+// const crypto = require('crypto')
+//     , request = require('request')
+
+// const url = process.argv[2] + '?AccountSid=' + accountSid
+
+// const twilioSig = crypto.createHmac('sha1', authToken).update(new Buffer(url, 'utf-8')).digest('Base64')
+
+// request({url: url, headers: { 'X-TWILIO-SIGNATURE': twilioSig }}, function(err, res, body) {
+//   console.log(body)
+// })
+
 
 /// start cloud function
 
@@ -44,13 +56,18 @@ exports.textStatus = functions.database
                         throw new Error('the user expected no SMS!')
                     }
 
+                    if(status!=="fall detected"){
+                        throw new Error('no fall detected!')
+                    }
+
                     const textMessage = {
-                        body: `The condition of elderly: ${status}`,
+                        //body: `The condition of elderly: ${status}`,
+                        url:'http://demo.twilio.com/docs/voice.xml',
                         to: phoneNumber,  // Text to this number
                         from: twilioNumber // From a valid Twilio number
                     }
 
-                    return client.messages.create(textMessage)
+                    return client.calls.create(textMessage)
                 })
                 .then(message => console.log(message.sid, 'success'))
                 .catch(err => console.log(err+" eRRoR has occured"))

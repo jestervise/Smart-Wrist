@@ -22,11 +22,15 @@ export class Profile extends Component {
     this.state = {
       image: require("../assets/placeholderProfilePic.png"),
       isVisible: false,
-      showPhotoSelection: false
+      showPhotoSelection: false,
+      displayName: firebase.auth().currentUser.displayName == undefined ?
+      firebase.auth().currentUser.email : firebase.auth().currentUser.displayName,
+      editable: false,
     };
    
     this.ChooseFromGalleryAsync = this.ChooseFromGalleryAsync.bind(this);
     this.TakePhotoAsync = this.TakePhotoAsync.bind(this);
+    this.textInput = React.createRef();
   }
   componentWillMount() {
     this.initializeHeaderImage();
@@ -75,6 +79,20 @@ export class Profile extends Component {
         this.UploadToStorage(result.uri);
     }
   }
+
+  //When change display name button is clicked,make the username editable and focus username
+ChangeDisplayName=()=> {
+  this.setState({ editable: true });
+  this.textInput.current.focus();
+}
+//if submit on click,make it ineditable and update the specific user's display name
+SaveDisplayName=()=> {
+  this.setState({ editable: false });
+  firebase.auth().currentUser.updateProfile({
+    displayName: this.state.displayName
+  }).then(() => console.log(firebase.auth().currentUser.displayName));
+}
+
   //Establish connection to local storage,Set the header image to selected photo, and upload the image
   async UploadToStorage(uri) {
     const blob = await new Promise((resolve, reject) => {
@@ -119,23 +137,7 @@ export class Profile extends Component {
           </TouchableOpacity>
 
     </Overlay>
-    /*,transform: [
-    {translateY: this.scrollAnimatedValue.interpolate({
-      inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
-      outputRange: [IMAGE_HEIGHT / 2, 0, -IMAGE_HEIGHT / 2],
-      extrapolateRight: 'clamp',
-    })},
-    {scaleX: this.scrollAnimatedValue.interpolate({
-      inputRange: [-IMAGE_HEIGHT, 0],
-      outputRange: [2, 1],
-      extrapolateRight: 'clamp',
-    })},
-    {scaleY: this.scrollAnimatedValue.interpolate({
-      inputRange: [-IMAGE_HEIGHT, 0],
-      outputRange: [2, 1],
-      extrapolateRight: 'clamp',
-    })},
-  ] */
+    
   return (
   <View style={{ flex: 1,backgroundColor:themeColor }}>
       <TopLeftOverlay/>
@@ -164,8 +166,24 @@ export class Profile extends Component {
           </View>
           <ProfileCircle />
         </AnimatedImageBackground>
+        <Animated.View style={{ flexDirection: 'row',marginTop:IMAGE_HEIGHT,padding:10,position:"absolute",justifyContent:"center",width:"100%",zIndex:500,backgroundColor:"#ECEBF3",transform: [
+        {translateY: this.scrollAnimatedValue.interpolate({
+          inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
+          outputRange: [IMAGE_HEIGHT/2 , 0, -IMAGE_HEIGHT/1.5 ],
+          extrapolateRight: 'clamp',
+        })},
+        {scale: this.scrollAnimatedValue.interpolate({
+          inputRange: [-IMAGE_HEIGHT, 0],
+          outputRange: [2, 1],
+          extrapolateRight: 'clamp',
+        })},
+      ]}}><View style={{width:"20%"}}/>
+            <TextInput ref={this.textInput} value={this.state.displayName} editable={this.state.editable} 
+            onSubmitEditing={this.SaveDisplayName} onChangeText={(text) => this.setState({ displayName: text })} style={{ color: "#F68909", fontSize: 15, textAlign: "left", fontWeight: 'bold' }} />
+            <EditUserName ChangeDisplayName={this.ChangeDisplayName} />
+        </Animated.View>
         <UserStatus scrollAnimatedValue={this.scrollAnimatedValue}/>
-    <Animated.ScrollView contentContainerStyle={{marginTop:IMAGE_HEIGHT*1.45}} onScroll={Animated.event(
+    <Animated.ScrollView contentContainerStyle={{marginTop:IMAGE_HEIGHT*1.47,paddingBottom: IMAGE_HEIGHT*1.47,}} onScroll={Animated.event(
       [{ nativeEvent: { contentOffset: { y: this.scrollAnimatedValue }} }],
       {useNativeDriver:true}
       )}
@@ -180,6 +198,9 @@ export class Profile extends Component {
         <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face."/>
         <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you."/>
         <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
+        <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
+        <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
+        <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have."/>
     </Animated.ScrollView>
   </View>);
   }
@@ -190,27 +211,11 @@ class UserStatus extends Component{
   constructor(props){
     super(props)
     this.state={
-      displayName: firebase.auth().currentUser.displayName == undefined ?
-      firebase.auth().currentUser.email : firebase.auth().currentUser.displayName,
-      editable: false,
+      
       location: null,
     }
-
-    this.textInput = React.createRef();
   }
 
-//When change display name button is clicked,make the username editable and focus username
-ChangeDisplayName=()=> {
-  this.setState({ editable: true });
-  this.textInput.current.focus();
-}
-//if submit on click,make it ineditable and update the specific user's display name
-SaveDisplayName=()=> {
-  this.setState({ editable: false });
-  firebase.auth().currentUser.updateProfile({
-    displayName: this.state.displayName
-  }).then(() => console.log(firebase.auth().currentUser.displayName));
-}
 
 async getLocationAsync() {
   //If location services is enabled
@@ -258,10 +263,10 @@ componentWillMount(){
 
     return( 
       <Animated.View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',backgroundColor:'#ECEBF3',
-      marginTop:height*0.4,position:'absolute',zIndex:1000,transform: [
+      marginTop:height*0.45,position:'absolute',transform: [
         {translateY: this.props.scrollAnimatedValue.interpolate({
           inputRange: [-IMAGE_HEIGHT, 0, IMAGE_HEIGHT],
-          outputRange: [IMAGE_HEIGHT / 2, 0, -IMAGE_HEIGHT / 1.5],
+          outputRange: [IMAGE_HEIGHT/2 , 0, -IMAGE_HEIGHT/1.5 ],
           extrapolateRight: 'clamp',
         })},
         {scale: this.props.scrollAnimatedValue.interpolate({
@@ -269,23 +274,27 @@ componentWillMount(){
           outputRange: [2, 1],
           extrapolateRight: 'clamp',
         })},
-      ],}}>
+      ],width:"100%"}}>
         {/* Left indentation*/}
-        <View style={{flex:0.4,backgroundColor:'blue'}}/>
+        <View style={{flex:0.3,backgroundColor:'blue'}}/>
         {/* The input name */}
-        <View style={{ flex:0.5,alignSelf:'flex-end', marginVertical:20,marginTop:20, }}>
-          <View style={{ flexDirection: 'row' }}>
+        <View style={{ flex:0.6,alignSelf:'flex-end', marginVertical:20,marginTop:20 }}>
+          {/* <Animated.View style={{ flexDirection: 'row'}}>
             <TextInput ref={this.textInput} value={this.state.displayName} editable={this.state.editable} 
             onSubmitEditing={this.SaveDisplayName} onChangeText={(text) => this.setState({ displayName: text })} style={{ color: "#F68909", fontSize: 15, textAlign: "left", fontWeight: 'bold' }} />
             <EditUserName ChangeDisplayName={this.ChangeDisplayName} />
-          </View>
-          <View style={{ flexDirection: 'row', paddingTop: 5, }}>
+          </Animated.View> */}
+          <Animated.View style={{ flexDirection: 'row', paddingTop: 5,opacity:this.props.scrollAnimatedValue.interpolate({
+            inputRange:[-IMAGE_HEIGHT,IMAGE_HEIGHT],
+            outputRange:[1,0],
+            extrapolateRight: 'clamp',
+          }),zIndex:-1 }}>
             <Icon name="md-pin" size={12} color="#6D7275" />
             <Text style={{ paddingLeft: 10, color: '#6D7275', fontSize: 12, textAlign: 'left' ,fontWeight:'bold'}}>{location}</Text>
-          </View>
+          </Animated.View>
         </View>
         {/* Right Button */}
-        <RNButton title="Thanos" titleStyle={{color:'#FF6A6A'}} buttonStyle={{backgroundColor:'transparent',shadowColor: "#919191",
+        {/* <RNButton title="Thanos" titleStyle={{color:'#FF6A6A'}} buttonStyle={{backgroundColor:'transparent',shadowColor: "#919191",
         shadowOffset: {
         width: 0,
         height: 1,
@@ -293,7 +302,7 @@ componentWillMount(){
         shadowOpacity: 0.18,
         shadowRadius: 1.00,
   
-        elevation: 1,padding:20,paddingVertical:10,marginRight:20,borderRadius:10}} style={{flex:0.2,backgroundColor:'yellow',marginRight:10}}/>
+        elevation: 1,padding:20,paddingVertical:10,marginRight:20,borderRadius:10}} style={{flex:0.2,backgroundColor:'yellow',marginRight:10}}/> */}
       </Animated.View>
     )
 
@@ -303,9 +312,9 @@ componentWillMount(){
 
 
 const ReportFeed =(props)=>{
-  const themeColor='#6D7275'
+  const themeColor='#ECEBF3'
   const style={padding:20,backgroundColor:'#FF6A6A',width:'80%',height:'auto',
-  borderRadius: 10,alignItems: 'center',shadowColor: "#000",
+  borderRadius: 0,alignItems: 'center',shadowColor: "#000",
   shadowOffset: {
     width: 0,
     height: 2,
@@ -317,10 +326,9 @@ const ReportFeed =(props)=>{
   return (
     <View style={{alignItems:'center',marginBottom:20,justifyContent: 'center',}}>
         <View style={style}>
-        <View style={{width:20,height:20,backgroundColor:themeColor,borderRadius:50,position:'absolute',left:-10,top:"60%"}}/>
+        <View style={{width:20,height:20,backgroundColor:themeColor,borderRadius:50,position:'absolute',left:-10,top:"60%",borderWidth:2,borderColor:'#F15025'}}/>
         <View><Text style={{color:themeColor}}>{props.text}</Text></View>
-          
-          </View>
+        </View>
     </View>
   )
 }
