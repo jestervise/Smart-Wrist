@@ -156,7 +156,7 @@ export class ProfileCircle extends Component{
   }
 
   render(){
-    return <Svg height={90} width={100} style={{position:'absolute',bottom:'-15%',left:0}}>
+    return <Svg height={100} width={110} style={{position:'absolute',bottom:'-15%',left:0}}>
    <Defs>
    <ClipPath id="clip">
     <Circle

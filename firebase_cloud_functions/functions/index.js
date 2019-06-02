@@ -38,7 +38,7 @@ exports.textStatus = functions.database
        .ref('/caregiverDetails/V6l3238f8oQzrgMmIWgTlhVcNI73/status')
        .onUpdate(event => {
 
-    
+            
     return admin.database()
                 .ref(`/caregiverDetails/V6l3238f8oQzrgMmIWgTlhVcNI73`)
                 .once('value')
