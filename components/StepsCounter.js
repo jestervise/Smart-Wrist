@@ -83,6 +83,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 15,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   }
 });

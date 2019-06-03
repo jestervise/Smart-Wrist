@@ -194,7 +194,7 @@ export class Profile extends Component {
           <EditUserName ChangeDisplayName={this.ChangeDisplayName} />
         </Animated.View>
         <UserStatus scrollAnimatedValue={this.scrollAnimatedValue} />
-        <Animated.ScrollView contentContainerStyle={{ marginTop: IMAGE_HEIGHT * 1.47, paddingBottom: IMAGE_HEIGHT * 1.47, }} onScroll={Animated.event(
+        <Animated.ScrollView ref={(scrollView) => (this._scrollView = scrollView)} contentContainerStyle={{ marginTop: IMAGE_HEIGHT * 1.47, paddingBottom: IMAGE_HEIGHT * 1.47, }} onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: this.scrollAnimatedValue } } }],
           { useNativeDriver: true }
         )}
@@ -212,6 +212,14 @@ export class Profile extends Component {
           <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
           <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
           <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
+          {/*Back to top button */}
+          <TouchableOpacity style={{
+            backgroundColor: "#fff", justifyContent: 'center', alignItems: 'center', padding: 5, marginBottom: 20, alignSelf: "center",
+            borderRadius: 100, width: "12%"
+          }}
+            onPress={() => { this._scrollView.getNode().scrollTo({ x: 0, y: 0, animated: true }) }}>
+            <Icon name="md-arrow-round-up" size={30} color="#FF5A5A" />
+          </TouchableOpacity>
         </Animated.ScrollView>
       </View>);
   }
