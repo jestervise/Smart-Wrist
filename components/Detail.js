@@ -7,6 +7,7 @@ var { height, width } = Dimensions.get("window")
 import { LineChart, Grid, PieChart } from 'react-native-svg-charts'
 import { Circle } from 'react-native-svg'
 import Tooltip from './Tooltip'
+import firebase from './firebaseconfig'
 
 export class Detail extends Component {
     state = { showStatus: "Temperature", unit: "°C", selected: 1 }
@@ -74,7 +75,7 @@ const BottomReport = (props) => {
                 borderWidth: 2, borderColor: themeColor, margin: 10, borderRightWidth: 2,
             }}
                 textStyle={{ textAlign: 'center', color: themeColor, padding: 5, fontWeight: 'bold', fontSize: 10 }} selectedIndex={props.selected}
-                selectedButtonStyle={{ backgroundColor: 'white', borderWidth: 0 }} innerBorderStyle={{ color: 'transparent', width: 0 }} 
+                selectedButtonStyle={{ backgroundColor: 'white', borderWidth: 0 }} innerBorderStyle={{ color: 'transparent', width: 0 }}
                 selectedTextStyle={{ color: '#F55555' }} onPress={props.SwitchTab} />
         </View>
         <View>
@@ -97,6 +98,16 @@ class ReportChart extends Component {
 
     contentInset = { top: 5, left: 5, right: 5, bottom: 5 }
 
+    componentDidMount() {
+        const data = [];
+        firebase.database().ref("Accelerometer").once('value',
+            (snapshot) => {
+                snapshot.forEach((x) => {
+                    data.push(x.child("Net Acceleration"))
+                })
+            }).then(() => { this.setState({ data: data }) })
+
+    }
 
 
     render() {

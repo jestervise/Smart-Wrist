@@ -40,7 +40,7 @@ export class Feed extends Component {
         });
         if (action !== TimePickerAndroid.dismissedAction) {
           var uid = firebase.auth().currentUser.uid;
-          createCalenderEvent(year, month + 1, day, hour, minute);
+          createCalenderEvent(year, month, day, hour, minute);
           writeUserData(uid, day, month + 1, year, hour, minute).then(() => this.props.navigation.navigate('TimerStack'));
         }
       }

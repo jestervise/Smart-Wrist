@@ -47,7 +47,7 @@ export class Timer extends Component {
         });
         if (action !== TimePickerAndroid.dismissedAction) {
           var uid = firebase.auth().currentUser.uid;
-          let calendarId = await createCalenderEvent(year, month + 1, day, hour, minute);
+          let calendarId = await createCalenderEvent(year, month, day, hour, minute);
           this.AddAlarmAnimation().then(() => writeUserData(uid, day, month + 1, year, hour, minute)).
             then((done) => {
               if (done = "done")

@@ -1,5 +1,7 @@
 import { Calendar } from 'expo';
-import {AsyncStorage} from 'react-native'
+import { AsyncStorage } from 'react-native'
+import moment from 'moment'
+
 export async function createCalenderEvent(year, month, day, hour, minute) {
   let id;
   //Reformat the time 
@@ -11,10 +13,14 @@ export async function createCalenderEvent(year, month, day, hour, minute) {
   let calendarId;
   calendarId = calendars[0].id;
   //Set the date to the date selected by user
-  let date = new Date(year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + "00");
-  //Offset the hour to gmt -8 to counter the gmt+8 setting in android
-  date.setHours(date.getHours() /*- 8*/);
+  // let date = new Date(year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + "00");
+  // let date = moment().format(year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + "00");
+  let date = moment([year, month, day, hour, minute])
   //Create the alarm event on the specific calendar with the calendar id
+  console.log(moment([year, month, day, hour, minute]));
+  console.log("The date:" + year + " " + month + " " + day + " " + hour + " " + minute);
+  // console.log(date.toDateString());
+
   try {
     var eventId = await Calendar.createEventAsync(calendarId,
       //Details of reminder
@@ -27,13 +33,13 @@ export async function createCalenderEvent(year, month, day, hour, minute) {
         notes: "Take pill",
         //Alert user through 
         alarms: [{ relativeOffset: 0, method: "alert" }],
-        timeZone: "GMT+0",
+        timeZone: 'GMT+8',
         accessLevel: 'owner'
       }).then((x) => {
-         console.log("result:" + x);
-         id=x;
-         storeKeyValueReminder(x)
-     }).catch((x) => { console.log("failure" + x); });
+        console.log("result:" + x);
+        id = x;
+        storeKeyValueReminder(x)
+      }).catch((x) => { console.log("failure" + x); });
   }
   catch (error) {
     console.log(error);
@@ -43,16 +49,16 @@ export async function createCalenderEvent(year, month, day, hour, minute) {
 }
 
 
-async function storeKeyValueReminder(id){
+async function storeKeyValueReminder(id) {
   try {
     console.log(id);
     await AsyncStorage.setItem(id.toString(), id.toString());
   } catch (error) {
     // Error saving data
-    console.log("error saving:"+error)
+    console.log("error saving:" + error)
   }
 }
 
-export function deleteCalendarEvent(){
+export function deleteCalendarEvent() {
 
 }
