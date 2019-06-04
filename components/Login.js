@@ -5,12 +5,13 @@ import * as Animatable from 'react-native-animatable';
 import { Font } from 'expo';
 var { height, width } = Dimensions.get("window");
 import firebase from './firebaseconfig'
+import Firebase from 'firebase'
 import Icon from '@expo/vector-icons/Ionicons';
 import { accountLoginSuccess, accountLoginFailed } from "../redux/actions"
 import { connect } from "react-redux";
 import { Facebook } from 'expo';
 import { createStackNavigator, createAppContainer } from 'react-navigation'
-
+import FBSDK, { LoginManager, AccessToken } from 'react-native-fbsdk'
 
 
 let register = (email, password) => firebase.auth().createUserWithEmailAndPassword(email, password).catch(function (error) {
@@ -165,13 +166,44 @@ class LoginPanel extends Component {
 
                 break;
         }
+
+        // LoginManager.logInWithReadPermissions(['public_profile']).then(
+        //     function (result) {
+        //         if (result.isCancelled) {
+        //             alert('Login was cancelled');
+        //         } else {
+        //             alert('Login was successful with permissions: '
+        //                 + result.grantedPermissions.toString());
+        //         }
+        //     },
+        //     function (error) {
+        //         alert('Login failed with error: ' + error);
+        //     }
+        // );
+
+        // LoginManager.logInWithReadPermissions("public_profile").then((result) => {
+        //     if (result.isCancelled) {
+        //         alert("Login Cancelled")
+        //     } else {
+        //         AccessToken.getCurrentAccessToken().then((accessTokenData) => {
+        //             const credential = Firebase.auth.FacebookAuthProvider.credential(accessTokenData.accessToken)
+        //             firebase.auth().signInAndRetrieveDataWithCredential(credential).then((result) => {
+
+        //             }).catch((f) => {
+        //                 console.log(f)
+        //             })
+        //         })
+        //     }
+        // },)
+
         console.log("xd");
         const { type, token } = await Facebook.logInWithReadPermissionsAsync
-            ("409965669801114", { permission: [public_profile] });
+            ("409965669801114", { permission: ["public_profile"] });
         if (type == "success") {
             console.log(type);
-            const credential = firebase.auth.FacebookAuthProvider.credential(token);
-            firebase.auth().signInWithCredential(credential).catch((error) => {
+            console.log(token)
+            const credential = Firebase.auth.FacebookAuthProvider.credential(token)
+            firebase.auth().signInAndRetrieveDataWithCredential(credential).catch((error) => {
                 console.log(error)
             })
         } else {
