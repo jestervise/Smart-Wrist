@@ -35,10 +35,11 @@ export class MiddleCircle extends Component {
     return Promise.all(
 
       firebase.database().ref("tempHumidData/" + userId + "/-Lc_jjC0XmlMz5rz3Vzf/temp").on('value', (snapshot) => {
+        tempHumid[0] = snapshot.val();
         this.setState({ temp: snapshot.val() });
       }),
       firebase.database().ref("tempHumidData/" + userId + "/-Lc_jjC0XmlMz5rz3Vzf/humid").on('value', (snapshot) => {
-
+        tempHumid[1] = snapshot.val();
         this.setState({ humid: snapshot.val() });
       })
     )

@@ -32,7 +32,7 @@ const Tooltip = ({
                     {tooltipY}
                 </Text>
                 <Text x={tooltipY > 9 ? 24 : 22} y={14} stroke="#F55555" strokeWidth={1}>
-                    lala
+                    {tooltipY}
         </Text>
             </G>
         </G>

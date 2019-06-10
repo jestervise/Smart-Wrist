@@ -55,13 +55,20 @@ export class Feed extends Component {
     this.getLocationAsync();
   }
   getLocationAsync = async () => {
-    let { status } = await Permissions.askAsync(Permissions.LOCATION);
-    console.log("they passed through here");
-    console.log(status);
-    if (status !== 'granted') {
+    const state = await Permissions.getAsync(Permissions.LOCATION);
+    if (state != "granted") {
+      let { status } = await Permissions.askAsync(Permissions.LOCATION);
+      console.log("they passed through here");
       console.log(status);
+      if (status !== 'granted') {
+        console.log(status);
+      }
+    } else {
+      console.log("thestate" + state);
     }
-  };
+
+  }
+
   componentDidMount() {
     //Linking.openURL(`tel:${"0123456789"}`);
   }
@@ -122,12 +129,12 @@ export class Feed extends Component {
 
         {this.state.isIOS && <Button title="Submit" onPress={() => { this.props.navigation.navigate('TimerStack', { year: year, month: month, day: day }); }} />}
 
-        <View style={{ width: "100%", height: 200, backgroundColor: "white", marginBottom: 20 }}>
+        <View style={{ width: "100%", height: '25%', backgroundColor: "white", marginBottom: 20 }}>
           <StepsCounter />
         </View>
         <TouchableOpacity style={{
-          backgroundColor: "#fff", justifyContent: 'center', alignItems: 'center', padding: 5, marginBottom: 20, alignSelf: "center",
-          borderRadius: 100, width: "12%"
+          backgroundColor: "#fff", justifyContent: 'center', alignItems: 'center', padding: 5, marginBottom: 60, alignSelf: "center",
+          borderRadius: 120, width: "12%"
         }}
           onPress={() => { this._scrollView.scrollTo({ x: 0, y: 0, animated: true }) }}>
           <Icon name="md-arrow-round-up" size={30} color="#FF5A5A" />

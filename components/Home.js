@@ -279,10 +279,19 @@ const DashboardStackNavigator = createStackNavigator(
 );
 
 const AppDrawerNavigator = createDrawerNavigator({
-  Dashboard: {
+  Home: {
     screen: DashboardStackNavigator
   },
-  Settings:{screen:Settings}
+  Profile:{
+    screen:Profile
+  },
+  Reminder:{
+    screen:Timer
+  },
+  Settings:{
+    screen:Settings
+  },
+
   
 });
 

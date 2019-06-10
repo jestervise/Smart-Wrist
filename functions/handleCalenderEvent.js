@@ -1,6 +1,13 @@
-import { Calendar } from 'expo';
+import { Calendar, Permissions } from 'expo';
 import { AsyncStorage } from 'react-native'
 import moment from 'moment'
+
+export async function getCalendarsPermission() {
+  const status = await Permissions.askAsync(Permissions.CALENDAR);
+  if (status == "granted") {
+    console.log("granted")
+  }
+}
 
 export async function createCalenderEvent(year, month, day, hour, minute) {
   let id;
@@ -9,12 +16,11 @@ export async function createCalenderEvent(year, month, day, hour, minute) {
   minute < 10 ? minutes = "0" + minute : minute;
   month < 10 ? month = "0" + month : month;
   //Get the calendar in your local device
-  let calendars = await Calendar.getCalendarsAsync();
-  let calendarId;
-  calendarId = calendars[0].id;
+  // let calendars = await Calendar.getCalendarsAsync();
+  // console.log(calendars)
+  // let calendarId;
+  // calendarId = calendars[0].id;
   //Set the date to the date selected by user
-  // let date = new Date(year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + "00");
-  // let date = moment().format(year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + "00");
   let date = moment([year, month, day, hour, minute])
   //Create the alarm event on the specific calendar with the calendar id
   console.log(moment([year, month, day, hour, minute]));
@@ -22,7 +28,7 @@ export async function createCalenderEvent(year, month, day, hour, minute) {
   // console.log(date.toDateString());
 
   try {
-    var eventId = await Calendar.createEventAsync(calendarId,
+    var eventId = await Calendar.createEventAsync(Calendar.DEFAULT,
       //Details of reminder
       {
         title: 'Smart Wrist: Take Pill',

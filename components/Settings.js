@@ -69,14 +69,16 @@ export class Settings extends Component {
     let userId = firebase.auth().currentUser.uid;
     if (this.state.isToggle == false) {
       firebase.database().ref("caregiverDetails/" + userId + "/shouldReceiveSMS").set("true");
+      firebase.database().ref("caregiverDetails/" + userId + "/shouldReceiveCall").set("true");
     } else {
       firebase.database().ref("caregiverDetails/" + userId + "/shouldReceiveSMS").set("false");
+      firebase.database().ref("caregiverDetails/" + userId + "/shouldReceiveCall").set("false");
     }
   }
 
   render() {
     let buttonStyle = { marginBottom: 20 }
-    let text = ["Change Caregiver Contact Number", "Sign Out", "Make Call when fall detected", "Close App",
+    let text = ["Change Caregiver Contact Number", "Sign Out", "Make Call & Send SMS When Fall Detected", "Close App",
       "Duis aute irure dolor in reprehenderit"]
     let contact = (
       <Overlay isVisible={this.state.isVisible}>
@@ -157,17 +159,19 @@ const SettingsObject = (props) => {
     props.handleFunction();
   }
 
-  return <View style={{
-    backgroundColor: 'transparent',
-    marginBottom: 0, height: 55, flexDirection: 'row',
-    elevation: 3, justifyContent: 'space-between', alignItems: 'center'
-  }}>
-    <Text style={{ color: '#fff', fontSize: 12, paddingLeft: 20, opacity: 0.8 }}>{props.text}</Text>
-    <TouchableOpacity onPress={this.changeName}>
-      <Icon name="md-arrow-dropright" size={20} color="white" style={{ paddingRight: 10 }} />
+  return (
+    <TouchableOpacity onPress={this.changeName} style={{ backgroundColor: 'transparent',flexDirection: 'row',
+    marginBottom: 0, height: 55,
+    elevation: 3, justifyContent: 'space-between', alignItems: 'center'}}> 
+      <Text style={{ color: '#fff', fontSize: 12, paddingLeft: 20, opacity: 0.8 }}>{props.text}</Text>
+      <Icon name="md-arrow-dropright" size={20} color="white" style={{ paddingRight: 10,paddingLeft:10 }} />
     </TouchableOpacity>
 
-  </View>;
+  )
+
+    
+
+
 }
 
 class ToggleObject extends Component {

@@ -11,7 +11,7 @@ import { LinearGradient, Font } from 'expo';
 import { Overlay, Button as RNButton } from 'react-native-elements';
 import { AddTimer } from '../functions/AddTimer';
 import { writeUserData } from '../functions/writeUserData';
-import { createCalenderEvent, deleteCalendarEvent } from '../functions/handleCalenderEvent';
+import { createCalenderEvent, deleteCalendarEvent, getCalendarsPermission } from '../functions/handleCalenderEvent';
 import { initializeFirebaseTimer } from './Home';
 import { timerObject, FonTelloIcon } from './Home';
 var { height, width } = Dimensions.get("window");
@@ -83,6 +83,11 @@ export class Timer extends Component {
       }
     });
   }
+
+  componentDidMount() {
+    getCalendarsPermission();
+  }
+
   _ChangeBackgroundColor = () => {
     //Get random index of colors array
     let randomNum = this.getRandomInt(this.colors.length);

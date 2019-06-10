@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Dimensions, FlatList, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Dimensions, FlatList, Image, ActivityIndicator } from 'react-native';
 import Icon from '@expo/vector-icons/Ionicons'
 import { tempHumid } from "./SvgShapes"
 import { Button, ButtonGroup, Divider } from 'react-native-elements'
@@ -8,6 +8,7 @@ import { LineChart, Grid, PieChart } from 'react-native-svg-charts'
 import { Circle } from 'react-native-svg'
 import Tooltip from './Tooltip'
 import firebase from './firebaseconfig'
+import moment from 'moment';
 
 export class Detail extends Component {
     state = { showStatus: "Temperature", unit: "°C", selected: 1 }
@@ -61,7 +62,7 @@ const BottomReport = (props) => {
     const TopTabBar = (props) => <Button title={props.title} buttonStyle={{ backgroundColor: 'transparent' }}
         containerStyle={{ margin: 2, backgroundColor: props.selected, width: '37%', height: '70%', borderWidth: 2, borderRadius: 0, borderColor: 'white' }}
         titleStyle={{ fontSize: 12.5, textAlign: 'center', textAlignVertical: 'center' }} onPress={this.buttonOnPress} />
-    const buttons = ["Temperature & Humidity", "Movement"]
+    const buttons = ["Movement", "Temperature & Humidity"]
 
     buttonOnPress = () => {
         props.SwitchTab();
@@ -93,6 +94,7 @@ class ReportChart extends Component {
         tooltipX: null,
         tooltipY: null,
         tooltipIndex: null,
+        receivedData: false
     };
 
 
@@ -100,69 +102,59 @@ class ReportChart extends Component {
 
     componentDidMount() {
         const data = [];
+        var number = 0;
         firebase.database().ref("Accelerometer").once('value',
             (snapshot) => {
                 snapshot.forEach((x) => {
-                    data.push(x.child("Net Acceleration"))
+                    let date = moment(x.child("Time").toJSON().toString());
+                    console.log(date)
+                    let numberAccel = parseFloat(x.child("Net Acceleration").toJSON().toString().split(" ")[0])
+                    data.push({ index: number++, dateTime: date, accel: numberAccel })
                 })
-            }).then(() => { this.setState({ data: data }) })
+            }).then(() => { this.setState({ data: data, receivedData: true }) })
 
     }
 
 
     render() {
-        const data = [{
-            id: 1,
-            date: "2019–01–26T22:37:01Z",
-            score: 3,
-        },
-        {
-            id: 2,
-            date: "2019–01–06T06:03:09Z",
-            score: 9,
-        },
-        {
-            id: 3,
-            date: "2019–01–28T14:10:00Z",
-            score: 10,
-        },
-        {
-            id: 4,
-            date: "2019–01–03T02:07:38Z",
-            score: 7,
-        },]
 
-        const { tooltipX, tooltipY, tooltipIndex } = this.state;
+
+        const { tooltipX, tooltipY, tooltipIndex, data } = this.state;
 
         const ChartPoints = ({ x, y, color }) =>
             data.map((item, index) => (
-                <Circle key={index} cx={x(item.id)} cy={y(item.score)} r={5} stroke={color} strokeWidth={2} fill='white'
-                    onPress={() => this.setState({ tooltipX: item.id, tooltipY: item.score, tooltipIndex: index, })} />
+                <Circle key={index} cx={x(item.dateTime)} cy={y(item.accel)} r={5} stroke={color} strokeWidth={2} fill='white'
+                    onPress={() => this.setState({ tooltipX: item.dateTime, tooltipY: item.accel, tooltipIndex: index, })} visibility="hidden" />
             ));
 
         if (this.props.showChart == 0) {
+            if (this.state.receivedData) {
 
-            return <View stlye={{ flex: 1 }}>
-                <LineChart
-                    style={{ height: 200, backgroundColor: '#fff', marginLeft: 20, marginRight: 20, borderRadius: 10 }}
-                    data={data}
-                    xAccessor={({ item }) => item.id}
-                    yAccessor={({ item }) => item.score}
-                    svg={{ stroke: '#F55555', strokeWidth: 3 }}
-                    contentInset={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                    numberOfTicks={0}
-                >
-                    <Grid />
-                    <ChartPoints color="#F55555" />
-                    <Tooltip
-                        tooltipX={tooltipX}
-                        tooltipY={tooltipY}
-                        color="red"
-                        index={tooltipIndex}
-                        dataLength={data.length}
-                    />
-                </LineChart>
-            </View>
+                return <View style={{ flex: 1 }}>
+                    <LineChart
+                        style={{ height: 200, backgroundColor: '#fff', marginLeft: 20, marginRight: 20, borderRadius: 10 }}
+                        data={data}
+                        xAccessor={({ item }) => item.dateTime}
+                        yAccessor={({ item }) => item.accel}
+                        svg={{ stroke: '#F55555', strokeWidth: 1 }}
+                        contentInset={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                        numberOfTicks={0}
+                    >
+                        <Grid />
+                        {/* <ChartPoints color="#F55555" />
+                        <Tooltip
+                            tooltipX={tooltipX}
+                            tooltipY={tooltipY}
+                            color="red"
+                            index={tooltipIndex}
+                            dataLength={data.length}
+                        /> */}
+                    </LineChart>
+                </View>
+            }
+            else {
+                return <ActivityIndicator size="small" color="#fff" />
+            }
         } else {
             const dataSecond = [50, 10, 40, 95, -4, -24, 85, 91, 35, 53, -53, 24, 50, -20, -80]
             const randomColor = () => ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7)
@@ -178,7 +170,7 @@ class ReportChart extends Component {
                 }))
 
 
-            return <View stlye={{ flex: 1 }}>
+            return <View style={{ flex: 1 }}>
                 <PieChart
                     style={{ height: 200, backgroundColor: '#fff', padding: 10, marginLeft: 20, marginRight: 20, borderRadius: 10 }}
                     data={pieData}
