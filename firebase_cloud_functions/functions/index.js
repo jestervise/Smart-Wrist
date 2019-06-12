@@ -57,9 +57,6 @@ exports.textStatus = functions.database
                     throw new Error('the user expected no SMS!')
                 }
 
-                if (status !== "fall detected") {
-                    throw new Error('no fall detected!')
-                }
 
                 if (shouldReceiveCall === "false") {
                     throw new Error('the user expected no Call!')
@@ -72,20 +69,44 @@ exports.textStatus = functions.database
                 }
 
                 const callMessage = {
-                    //body: `The condition of elderly: ${status}`,
+                    method: 'POST',
+                    statusCallBack: "https://postb.in/b/1560177355806-0404528579674",
+                    statusCallbackEvent: ['queued', 'answered'],
+                    statusCallbackMethod: 'GET',
                     url: 'http://demo.twilio.com/docs/voice.xml',
                     to: phoneNumber,  // Text to this number
                     from: twilioNumber // From a valid Twilio number
                 }
 
-                client.messages.create(textMessage)
-                return client.calls.create(callMessage)
+
+                if (status === "fallDetectedSMS") {
+                    return client.messages.create(textMessage)
+                } else if (status === "fallDetectedCall") {
+                    return makeCall(callMessage).then(call => {
+                        return makeCallChoice(call)
+                    }).catch(err => console.log(err))
+                }
+
+                throw new Error('no fall detected!')
+
             })
             .then(message => console.log(message.sid, 'success'))
             .catch(err => console.log(err + " eRRoR has occured"))
 
 
     });
+
+function makeCallChoice(call) {
+    if (call.status === "canceled") {
+        return makeCall(callMessage)
+    } else {
+        return console.log(call.status)
+    }
+}
+
+function makeCall(callMessage) {
+    return client.calls.create(callMessage)
+}
 
 
 /// Validate E164 format
