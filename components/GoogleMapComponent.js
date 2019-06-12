@@ -1,6 +1,6 @@
 import { MapView } from 'expo'
 import React, { Component } from 'react'
-import { View } from 'react-native'
+import { View, Text, Image } from 'react-native'
 import firebase from './firebaseconfig'
 
 export default class Map extends Component {
@@ -14,7 +14,7 @@ export default class Map extends Component {
                 longitudeDelta: 0.0421,
             },
             markers: [{
-                title: 'hello',
+                title: 'Send your elder to hospital!',
                 coordinates: {
                     latitude: 37.78825,
                     longitude: -122.4324,
@@ -23,8 +23,8 @@ export default class Map extends Component {
         }
     }
 
-    getLocation=()=>{
-        
+    getLocation = () => {
+
     }
 
     onRegionChange = (region) => {
@@ -33,7 +33,11 @@ export default class Map extends Component {
 
     render() {
         return (
-            <View>
+            <View style={{ backgroundColor: 'white' }}>
+                <Text style={{
+                    alignSelf: 'flex-start', fontSize: 20, fontWeight: 'bold', padding: 20,
+                    marginLeft: 10, color: 'red', borderRadius: 20
+                }}>Elderly's Location</Text>
                 <MapView
                     style={{ height: 300, marginHorizontal: 20, }}
                     region={this.state.region}
@@ -45,7 +49,10 @@ export default class Map extends Component {
                             longitude: -122.4324,
                         }}
                         title="Elderly fall location"
-                    />
+                        style={{ width: 10, height: 10 }}
+                    >
+                        <Image source={require("../assets/fallImage.png")} style={{ width: 100, height: 100 }} />
+                    </MapView.Marker>
                 </MapView>
             </View>
         );

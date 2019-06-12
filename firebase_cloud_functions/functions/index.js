@@ -7,6 +7,8 @@
 // });
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const moment = require('moment');
+const fetch = require('node-fetch')
 admin.initializeApp();
 
 const twilio = require('twilio');
@@ -96,12 +98,63 @@ exports.textStatus = functions.database
 
     });
 
+exports.dailyScheduler = functions.runWith({ memory: '2GB' }).pubsub
+    .schedule('* * * * *').onRun(async context => {
+        return admin.database().ref(`users/V6l3238f8oQzrgMmIWgTlhVcNI73`)
+            .once('value')
+            .then(snapshot => {
+                let newSnapshot = Object.entries(snapshot.val())
+                let date = "";
+                let time = "";
+                return newSnapshot.forEach((reminderItem) => {
+                    date = reminderItem[1].date
+                    time = reminderItem[1].time
+                    let dateTime = moment(date + " " + time, "D/M/YYYY H:mm").utc()
+                    if (moment().utc().isSameOrAfter(dateTime)) {
+                        sendPushNotification()
+                        console.log(time)
+                        admin.database().ref(`users/V6l3238f8oQzrgMmIWgTlhVcNI73/` + reminderItem[0]).remove();
+                    }
+                })
+
+            }
+            )
+            .catch((err) => console.log(err))
+    })
+
 function makeCallChoice(call) {
     if (call.status === "canceled") {
-        return makeCall(callMessage)
+        return makeCall(call)
     } else {
         return console.log(call.status)
     }
+}
+
+async function sendPushNotification() {
+    return await admin.database().ref('PushNotificationToken/V6l3238f8oQzrgMmIWgTlhVcNI73/push_token')
+        .once('value')
+        .then((snapshot) => {
+            let userToken = snapshot.val();
+            let response = fetch("https://exp.host/--/api/v2/push/send", {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    to: userToken,
+                    sound: 'default',
+                    title: "Reminder",
+                    body: 'Take pill'
+                })
+            })
+
+            return response;
+
+        }
+
+        ).catch(err => { console.log(err) })
+
 }
 
 function makeCall(callMessage) {

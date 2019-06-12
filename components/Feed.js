@@ -16,6 +16,7 @@ import { createCalenderEvent } from '../functions/handleCalenderEvent';
 var { height, width } = Dimensions.get("window");
 import { signOutPopUp } from '../functions/SignOut'
 import Map from './GoogleMapComponent'
+import pushNotification from './PushNotification'
 
 export class Feed extends Component {
   constructor(props) {
@@ -70,8 +71,9 @@ export class Feed extends Component {
 
   }
 
-  componentDidMount() {
-    //Linking.openURL(`tel:${"0123456789"}`);
+  async componentDidMount() {
+    let currentUserUID = firebase.auth().currentUser.uid
+    await pushNotification(currentUserUID)
   }
 
   //If user were to scroll to certain point, change the icon color to black
