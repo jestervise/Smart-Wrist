@@ -51,7 +51,7 @@ export default class Map extends Component {
                         title="Elderly fall location"
                         style={{ width: 10, height: 10 }}
                     >
-                        <Image source={require("../assets/fallImage.png")} style={{ width: 100, height: 100 }} />
+                        {/* <Image source={require("../assets/fallImage.png")} style={{ width: 100, height: 100 }} /> */}
                     </MapView.Marker>
                 </MapView>
             </View>

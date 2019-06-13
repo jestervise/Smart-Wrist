@@ -4,7 +4,7 @@ import Icon from '@expo/vector-icons/Ionicons'
 import { tempHumid } from "./SvgShapes"
 import { Button, ButtonGroup, Divider } from 'react-native-elements'
 var { height, width } = Dimensions.get("window")
-import { LineChart, Grid, PieChart } from 'react-native-svg-charts'
+import { LineChart, Grid, PieChart, AreaChart } from 'react-native-svg-charts'
 import { Circle } from 'react-native-svg'
 import Tooltip from './Tooltip'
 import firebase from './firebaseconfig'
@@ -94,7 +94,9 @@ class ReportChart extends Component {
         tooltipX: null,
         tooltipY: null,
         tooltipIndex: null,
-        receivedData: false
+        receivedData: false,
+        receivedData2: false,
+        tempData: []
     };
 
 
@@ -102,8 +104,23 @@ class ReportChart extends Component {
 
     componentDidMount() {
         const data = [];
+        const tempData = []
         var number = 0;
-        firebase.database().ref("Accelerometer").once('value',
+        var number1 = 0
+
+        //Get temperature and humidity data
+        firebase.database().ref("Environment").limitToLast(40).once('value',
+            (snapshot) => {
+                snapshot.forEach((x) => {
+                    let humid = parseInt(x.child("Humidity").toJSON().toString());
+                    console.log(humid)
+                    let temp = parseInt(x.child("Temperature").toJSON().toString());
+                    tempData.push({ index: number1++, humid: humid, temp: temp })
+                })
+            }).then(() => { this.setState({ tempData: tempData, receivedData2: true }) })
+
+        //Get accelerometer data 
+        firebase.database().ref("Accelerometer").limitToLast(40).once('value',
             (snapshot) => {
                 snapshot.forEach((x) => {
                     let date = moment(x.child("Time").toJSON().toString());
@@ -112,6 +129,8 @@ class ReportChart extends Component {
                     data.push({ index: number++, dateTime: date, accel: numberAccel })
                 })
             }).then(() => { this.setState({ data: data, receivedData: true }) })
+
+
 
     }
 
@@ -131,56 +150,82 @@ class ReportChart extends Component {
             if (this.state.receivedData) {
 
                 return <View style={{ flex: 1 }}>
-                    <LineChart
+                    <AreaChart
                         style={{ height: 200, backgroundColor: '#fff', marginLeft: 20, marginRight: 20, borderRadius: 10 }}
                         data={data}
                         xAccessor={({ item }) => item.dateTime}
                         yAccessor={({ item }) => item.accel}
-                        svg={{ stroke: '#F55555', strokeWidth: 1 }}
-                        contentInset={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                        svg={{ fill: '#F55555' }}
+                        contentInset={{ top: 30, bottom: 20, left: 20, right: 30 }}
                         numberOfTicks={0}
                     >
                         <Grid />
-                        {/* <ChartPoints color="#F55555" />
+                        <ChartPoints color="#F55555" />
                         <Tooltip
                             tooltipX={tooltipX}
                             tooltipY={tooltipY}
                             color="red"
                             index={tooltipIndex}
                             dataLength={data.length}
-                        /> */}
-                    </LineChart>
+                        />
+                    </AreaChart>
                 </View>
             }
             else {
                 return <ActivityIndicator size="small" color="#fff" />
             }
         } else {
-            const dataSecond = [50, 10, 40, 95, -4, -24, 85, 91, 35, 53, -53, 24, 50, -20, -80]
+            const { tempData } = this.state;
             const randomColor = () => ('#' + (Math.random() * 0xFFFFFF << 0).toString(16) + '000000').slice(0, 7)
-            const pieData = dataSecond
-                .filter(value => value > 0)
-                .map((value, index) => ({
-                    value,
-                    svg: {
-                        fill: randomColor(),
-                        onPress: () => console.log('press', index),
-                    },
-                    key: `pie-${index}`,
-                }))
+            // const pieData = dataSecond
+            //     .filter(value => value > 0)
+            //     .map((value, index) => ({
+            //         value,
+            //         svg: {
+            //             fill: randomColor(),
+            //             onPress: () => console.log('press', index),
+            //         },
+            //         key: `pie-${index}`,
+            //     }))
 
 
-            return <View style={{ flex: 1 }}>
-                <PieChart
-                    style={{ height: 200, backgroundColor: '#fff', padding: 10, marginLeft: 20, marginRight: 20, borderRadius: 10 }}
-                    data={pieData}
-                    contentInset={{ top: 20, bottom: 20, left: 20, right: 20 }}
-                    numberOfTicks={0}
-                    contentInset={{ top: 20, bottom: 20, left: 0, right: 0 }}
-                >
-                    <Grid />
-                </PieChart>
-            </View>
+            // return <View style={{ flex: 1 }}>
+            //     {/* <PieChart
+            //         style={{ height: 200, backgroundColor: '#fff', padding: 10, marginLeft: 20, marginRight: 20, borderRadius: 10 }}
+            //         data={pieData}
+            //         contentInset={{ top: 20, bottom: 20, left: 20, right: 20 }}
+            //         numberOfTicks={0}
+            //         contentInset={{ top: 20, bottom: 20, left: 0, right: 0 }}
+            //     >
+            //         <Grid />
+            //     </PieChart> */}
+
+
+            if (this.state.receivedData2)
+                return <View style={{ flex: 1 }}>
+                    <LineChart
+                        style={{ height: 200, backgroundColor: '#fff', marginLeft: 20, marginRight: 20, borderRadius: 10 }}
+                        data={tempData}
+                        xAccessor={({ item }) => item.index}
+                        yAccessor={({ item }) => item.humid}
+                        svg={{ stroke: '#F55555', strokeWidth: 1 }}
+                        contentInset={{ top: 20, bottom: 20, left: 20, right: 20 }}
+                        numberOfTicks={0}
+                    >
+                        <Grid />
+                        {/* <ChartPoints color="#F55555" />
+        <Tooltip
+            tooltipX={tooltipX}
+            tooltipY={tooltipY}
+            color="red"
+            index={tooltipIndex}
+            dataLength={data.length}
+        /> */}
+                    </LineChart>
+                </View>
+            else return <ActivityIndicator size="small" color="#fff" />
+
+            // </View>
         }
 
     }
