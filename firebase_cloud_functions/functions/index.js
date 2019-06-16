@@ -104,18 +104,21 @@ exports.dailyScheduler = functions.runWith({ memory: '2GB' }).pubsub
             .once('value')
             .then(snapshot => {
                 let newSnapshot = Object.entries(snapshot.val())
-                let date = "";
-                let time = "";
                 return newSnapshot.forEach((reminderItem) => {
-                    date = reminderItem[1].date
-                    time = reminderItem[1].time
-                    let dateTime = moment(date + " " + time, "D/M/YYYY H:mm").utc()
-                    if (moment().utc().isSameOrAfter(dateTime)) {
+                    let date = reminderItem[1].date
+                    let time = reminderItem[1].time
+                    let dateTime = moment(date + " " + time, "D/M/YYYY HH:mm", 'ms')
+                    if (moment(undefined, undefined, 'ms').add(8, 'hours').isSameOrAfter(dateTime)) {
                         sendPushNotification()
-                        console.log(time)
+                        // console.log("did send " + dateTime.format("D/M/YYYY HH:mm"))
                         admin.database().ref(`users/V6l3238f8oQzrgMmIWgTlhVcNI73/` + reminderItem[0]).remove();
+                    } else {
+                        // console.log("didn't delete and send " +
+                        //     dateTime.format("D/M/YYYY HH:mm") + "and the current time is"
+                        //     + moment(undefined, undefined, 'ms').utcOffset(8).format("D/M/YYYY HH:mm"))
                     }
                 })
+
 
             }
             )
