@@ -23,6 +23,21 @@ export default class Map extends Component {
         }
     }
 
+    componentDidMount() {
+        firebase.database().ref("GPS_info").on("value", (snapshot) => {
+            this.setState({
+                region: {
+                    latitude: parseFloat(snapshot.child("Latitude").val()),
+                    longitude: parseFloat(snapshot.child("Longitude").val()),
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421,
+                },
+
+            })
+            console.log(snapshot.child("Latitude").val())
+        })
+    }
+
     getLocation = () => {
 
     }
@@ -42,12 +57,12 @@ export default class Map extends Component {
                     style={{ height: 300, marginHorizontal: 20, }}
                     region={this.state.region}
                     onRegionChange={this.onRegionChange}
+                    scrollEnabled={false}
+                    loadingEnabled={true}
+                    camera={this.state.region}
                 >
                     <MapView.Marker
-                        coordinate={{
-                            latitude: 37.78825,
-                            longitude: -122.4324,
-                        }}
+                        coordinate={this.state.region}
                         title="Elderly fall location"
                         style={{ width: 10, height: 10 }}
                     >
