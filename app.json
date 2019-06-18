@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ReactNativeTestt",
+    "name": "Smart Wrist",
     "slug": "newFolder",
     "privacy": "public",
     "sdkVersion": "32.0.0",
@@ -24,10 +24,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.taylorsedu.ReactNativeTestt"
+      "bundleIdentifier": "com.taylorsedu.SmartWrist"
     },
     "android": {
-      "package": "com.taylorsedu.ReactNativeTestt",
+      "package": "com.taylorsedu.SmartWrist"
     }
   }
 }
