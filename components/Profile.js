@@ -6,6 +6,7 @@ import firebase from './firebaseconfig';
 import { Calendar as RNCalendar } from 'react-native-calendars';
 import { Permissions, Location, ImagePicker, IntentLauncherAndroid as IntentLauncher, LinearGradient } from 'expo';
 import { Overlay, Button as RNButton } from 'react-native-elements';
+import moment from 'moment'
 
 var { height, width } = Dimensions.get("window");
 
@@ -26,6 +27,10 @@ export class Profile extends Component {
       displayName: firebase.auth().currentUser.displayName == undefined ?
         firebase.auth().currentUser.email : firebase.auth().currentUser.displayName,
       editable: false,
+      tempData:[],
+      data:[],
+      receivedData:false,
+      receivedData2:false
     };
 
     this.ChooseFromGalleryAsync = this.ChooseFromGalleryAsync.bind(this);
@@ -34,6 +39,38 @@ export class Profile extends Component {
   }
   componentWillMount() {
     this.initializeHeaderImage();
+  
+      const data = [];
+      const tempData = []
+      var number = 0;
+      var number1 = 0
+
+      //Get temperature and humidity data
+      firebase.database().ref("Environment").limitToLast(40).once('value',
+          (snapshot) => {
+              snapshot.forEach((x) => {
+                  let humid = parseInt(x.child("Humidity").val());
+                  console.log(humid)
+                  let temp = parseInt(x.child("Temperature").val());
+                  tempData.push({ index: number1++, humid: humid, temp: temp })
+              })
+          }).then(() => { this.setState({ tempData: tempData, receivedData2: true }) })
+
+      //Get accelerometer data 
+      firebase.database().ref("Accelerometer").limitToLast(40).once('value',
+          (snapshot) => {
+              snapshot.forEach((x) => {
+                  let date = moment(x.child("Time").toJSON().toString());
+                  console.log(date)
+                  let numberAccel = parseFloat(x.child("Net Acceleration").toJSON().toString().split(" ")[0])
+                  data.push({ index: number++, dateTime: date, accel: numberAccel })
+              })
+          }).then(() => { this.setState({ data: data, receivedData: true }) })
+
+
+
+  
+
   }
   async initializeHeaderImage() {
     //when component mount, download image from firebase storage and set it profile header
@@ -200,18 +237,10 @@ export class Profile extends Component {
         )}
           // target 120fps
           scrollEventThrottle={8} >
-          <ReportFeed text="The hardest choices require the strongest wills" />
-          <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face." />
-          <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you." />
-          <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
-          {/* extended ver */}
-          <ReportFeed text="The hardest choices require the strongest wills" />
-          <ReportFeed text="Fun isn’t something one considers when balancing the universe. But this… does put a smile on my face." />
-          <ReportFeed text="When I’m done, half of humanity will still exist. Perfectly balanced, as all things should be. I hope they remember you." />
-          <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
-          <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
-          <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
-          <ReportFeed text="I know what it’s like to lose. To feel so desperately that you’re right, yet to fail nonetheless. Dread it. Run from it. Destiny still arrives. Or should I say, I have." />
+          {this.state.receivedData && this.state.receivedData2?
+           this.state.tempData.map((x)=><ReportFeed text={x.temp.toString()}/>)
+           :<View/>}
+         
           {/*Back to top button */}
           <TouchableOpacity style={{
             backgroundColor: "#fff", justifyContent: 'center', alignItems: 'center', padding: 5, marginBottom: 20, alignSelf: "center",

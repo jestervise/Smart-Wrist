@@ -112,9 +112,9 @@ class ReportChart extends Component {
         firebase.database().ref("Environment").limitToLast(40).once('value',
             (snapshot) => {
                 snapshot.forEach((x) => {
-                    let humid = parseInt(x.child("Humidity").toJSON().toString());
+                    let humid = parseInt(x.child("Humidity").val());
                     console.log(humid)
-                    let temp = parseInt(x.child("Temperature").toJSON().toString());
+                    let temp = parseInt(x.child("Temperature").val());
                     tempData.push({ index: number1++, humid: humid, temp: temp })
                 })
             }).then(() => { this.setState({ tempData: tempData, receivedData2: true }) })
