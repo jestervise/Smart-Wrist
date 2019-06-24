@@ -27,10 +27,10 @@ export class Profile extends Component {
       displayName: firebase.auth().currentUser.displayName == undefined ?
         firebase.auth().currentUser.email : firebase.auth().currentUser.displayName,
       editable: false,
-      tempData:[],
-      data:[],
-      receivedData:false,
-      receivedData2:false
+      tempData: [],
+      data: [],
+      receivedData: false,
+      receivedData2: false
     };
 
     this.ChooseFromGalleryAsync = this.ChooseFromGalleryAsync.bind(this);
@@ -39,37 +39,37 @@ export class Profile extends Component {
   }
   componentWillMount() {
     this.initializeHeaderImage();
-  
-      const data = [];
-      const tempData = []
-      var number = 0;
-      var number1 = 0
 
-      //Get temperature and humidity data
-      firebase.database().ref("Environment").limitToLast(40).once('value',
-          (snapshot) => {
-              snapshot.forEach((x) => {
-                  let humid = parseInt(x.child("Humidity").val());
-                  console.log(humid)
-                  let temp = parseInt(x.child("Temperature").val());
-                  tempData.push({ index: number1++, humid: humid, temp: temp })
-              })
-          }).then(() => { this.setState({ tempData: tempData, receivedData2: true }) })
+    const data = [];
+    const tempData = []
+    var number = 0;
+    var number1 = 0
 
-      //Get accelerometer data 
-      firebase.database().ref("Accelerometer").limitToLast(40).once('value',
-          (snapshot) => {
-              snapshot.forEach((x) => {
-                  let date = moment(x.child("Time").toJSON().toString());
-                  console.log(date)
-                  let numberAccel = parseFloat(x.child("Net Acceleration").toJSON().toString().split(" ")[0])
-                  data.push({ index: number++, dateTime: date, accel: numberAccel })
-              })
-          }).then(() => { this.setState({ data: data, receivedData: true }) })
+    //Get temperature and humidity data
+    firebase.database().ref("Environment").limitToLast(40).once('value',
+      (snapshot) => {
+        snapshot.forEach((x) => {
+          let humid = parseInt(x.child("Humidity").val());
+          console.log(humid)
+          let temp = parseInt(x.child("Temperature").val());
+          tempData.push({ index: number1++, humid: humid, temp: temp })
+        })
+      }).then(() => { this.setState({ tempData: tempData, receivedData2: true }) })
+
+    //Get accelerometer data 
+    firebase.database().ref("Accelerometer").limitToLast(40).once('value',
+      (snapshot) => {
+        snapshot.forEach((x) => {
+          let date = moment(x.child("Time").toJSON().toString());
+          console.log(date)
+          let numberAccel = parseFloat(x.child("Net Acceleration").toJSON().toString().split(" ")[0])
+          data.push({ index: number++, dateTime: date, accel: numberAccel })
+        })
+      }).then(() => { this.setState({ data: data, receivedData: true }) })
 
 
 
-  
+
 
   }
   async initializeHeaderImage() {
@@ -95,8 +95,9 @@ export class Profile extends Component {
     console.log("Take Photo method");
     //Ask for camera permissions
     let persmissions = await Permissions.askAsync(Permissions.CAMERA);
+    let camerarollPermissions = await Permissions.askAsync(Permissions.CAMERA_ROLL)
     //When it grants the permission, launch camera and hide choosePhotoSelection popup
-    if (persmissions.status == "granted")
+    if (persmissions.status == "granted" && camerarollPermissions.status == 'granted')
       var result = await ImagePicker.launchCameraAsync();
     this.setState({ showPhotoSelection: false });
     //Then upload to firebase storage
@@ -237,10 +238,10 @@ export class Profile extends Component {
         )}
           // target 120fps
           scrollEventThrottle={8} >
-          {this.state.receivedData && this.state.receivedData2?
-           this.state.tempData.map((x)=><ReportFeed text={x.temp.toString()}/>)
-           :<View/>}
-         
+          {this.state.receivedData && this.state.receivedData2 ?
+            environmentAccelDataMapping(this.state.tempData, this.state.data)
+            : <View />}
+
           {/*Back to top button */}
           <TouchableOpacity style={{
             backgroundColor: "#fff", justifyContent: 'center', alignItems: 'center', padding: 5, marginBottom: 20, alignSelf: "center",
@@ -252,6 +253,22 @@ export class Profile extends Component {
         </Animated.ScrollView>
       </View>);
   }
+}
+
+//this.state.tempData.map((x) => <ReportFeed text={"Temperature: " + x.temp.toString()} />
+
+function environmentAccelDataMapping(array1, array2) {
+  let data = []
+  for (let x = 0; x < array1.length; x++) {
+    data.push({
+      temp: array1[x].temp, humid: array1[x].humid,
+      accel: array2[x].accel, dateTime: array2[x].dateTime
+    })
+  }
+  return data.map((x) => <ReportFeed text={"Temperature: " + x.temp.toString()}
+    text2={"Humidity: " + x.humid.toString()} text3={"Acceleration: " + x.accel.toString()}
+    dateTime={x.dateTime.format("L LTS")}
+  />)
 }
 
 
@@ -385,7 +402,10 @@ const ReportFeed = (props) => {
     <View style={{ alignItems: 'center', marginBottom: 20, justifyContent: 'center', }}>
       <View style={style}>
         <View style={{ width: 20, height: 20, backgroundColor: themeColor, borderRadius: 50, position: 'absolute', left: -10, top: "60%", borderWidth: 2, borderColor: '#F15025' }} />
+        <View><Text style={{ color: themeColor, fontWeight: 'bold', marginBottom: 5 }}>{props.dateTime}</Text></View>
         <View><Text style={{ color: themeColor }}>{props.text}</Text></View>
+        <View><Text style={{ color: themeColor }}>{props.text2}</Text></View>
+        <View><Text style={{ color: themeColor }}>{props.text3}</Text></View>
       </View>
     </View>
   )

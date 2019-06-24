@@ -21,20 +21,7 @@ const client = new twilio(accountSid, authToken);
 
 const twilioNumber = '+16122610175' // your twilio phone number
 
-//Setup the credentials for accessing TwiML XML
-// const crypto = require('crypto')
-//     , request = require('request')
 
-// const url = process.argv[2] + '?AccountSid=' + accountSid
-
-// const twilioSig = crypto.createHmac('sha1', authToken).update(new Buffer(url, 'utf-8')).digest('Base64')
-
-// request({url: url, headers: { 'X-TWILIO-SIGNATURE': twilioSig }}, function(err, res, body) {
-//   console.log(body)
-// })
-
-
-/// start cloud function
 
 exports.textStatus = functions.database
     .ref('/caregiverDetails/V6l3238f8oQzrgMmIWgTlhVcNI73/status')

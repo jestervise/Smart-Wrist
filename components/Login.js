@@ -247,9 +247,9 @@ class LoginPanel extends Component {
                 <View style={{ justifyContent: 'space-evenly', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', width: '100%', padding: 2, marginBottom: 50, }}>
                     <View style={{ width: '100%', alignItems: 'center', marginBottom: 20 }}><TouchableOpacity style={styles.loginButtonStyle} onPress={this.loginButtonPressed}><Text style={styles.texts}>Login</Text></TouchableOpacity></View>
                     <TouchableOpacity style={[styles.providerSignIn, { backgroundColor: '#3b5998' }]} onPress={this.providerButtonPressed}>{this.iconGenerator("logo-facebook")}</TouchableOpacity>
-                    <TouchableOpacity style={[styles.providerSignIn, { backgroundColor: '#00acee' }]} onPress={() => { this.props.navigation.navigate('Home') }}>{this.iconGenerator("logo-twitter")}</TouchableOpacity>
-                    <TouchableOpacity style={[styles.providerSignIn, { backgroundColor: '#B23121' }]} onPress={() => { this.props.navigation.navigate('Home') }}>{this.iconGenerator("md-mail")}</TouchableOpacity>
-                    <View style={{ width: '100%', alignItems: 'center' }}><TouchableOpacity onPress={this.register}><Text style={styles.textingStyle}>Doesn't have an account? Register Here</Text></TouchableOpacity></View>
+                    {/* <TouchableOpacity style={[styles.providerSignIn, { backgroundColor: '#00acee' }]} onPress={() => { this.props.navigation.navigate('Home') }}>{this.iconGenerator("logo-twitter")}</TouchableOpacity>
+                    <TouchableOpacity style={[styles.providerSignIn, { backgroundColor: '#B23121' }]} onPress={() => { this.props.navigation.navigate('Home') }}>{this.iconGenerator("md-mail")}</TouchableOpacity> */}
+                    {/* <View style={{ width: '100%', alignItems: 'center' }}><TouchableOpacity onPress={this.register}><Text style={styles.textingStyle}>Doesn't have an account? Register Here</Text></TouchableOpacity></View> */}
 
                 </View>
             </Animatable.View>

@@ -57,9 +57,11 @@ export default class Map extends Component {
                     style={{ height: 300, marginHorizontal: 20, }}
                     region={this.state.region}
                     onRegionChange={this.onRegionChange}
-                    scrollEnabled={false}
+                    scrollEnabled={true}
                     loadingEnabled={true}
                     camera={this.state.region}
+                    minZoomLevel={17}
+                    followsUserLocation={true}
                 >
                     <MapView.Marker
                         coordinate={this.state.region}
