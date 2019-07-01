@@ -1,21 +1,16 @@
+# Splash Screen
 ![alt text](https://github.com/jestervise/Smart-Wrist/blob/New-Start/assets/splash.png)
+# Home Screen
+![alt text](https://github.com/jestervise/Smart-Wrist/blob/New-Start/assets/homeScreen.jpeg)
+User is able to check humidity and temperature in the home screen, and the elderly's location.
+# Reminder Screen
+![alt text](https://github.com/jestervise/Smart-Wrist/blob/New-Start/assets/addReminder.jpeg)
+From the reminder screen, user can add a reminder to remind the elderly to take a pill.
+
 
 # Smart-Wrist
-App.js is the entry point of the software and those sub modules are stored in component folder while the redux state management action files
-are stored in the redux folder, functions folder has the most commonly used functions across the software. 
+A system to detect fall by using Raspberry Pi, this github repo stores the React Native mobile app interface source code for the fall detection system. 
 
-# Page Navigation
-Login -> Home (Switch Navigator)
-Home -> Login (Through Login Authentication)
-
-Tab Navigator
-  HomeStack(Feed class,Details class)
-  ProfileStack(Profile class)
-  TimerStack(Timer class)
-  SettingsStack(Settings class)
-  
-Drawer Navigation 
-  Navigate to other stack through open drawer by swiping right
 
 
 
